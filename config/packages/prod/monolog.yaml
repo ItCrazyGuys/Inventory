@@ -1,0 +1,31 @@
+monolog:
+    handlers:
+        main:
+            type: fingers_crossed
+            action_level: error
+            channels: ["!inventory"]
+            handler: nested
+            excluded_404s:
+                # regex: exclude all 404 errors from the logs
+                - ^/
+        nested:
+            type: rotating_file
+            path: "%kernel.logs_dir%/%kernel.environment%.log"
+            level: debug
+            max_files: 1
+
+        console:
+            type:   console
+            process_psr_3_messages: false
+            channels: ["!event", "!doctrine"]
+
+        inventory_logging:
+            type: fingers_crossed
+            action_level: error
+            channels: ["inventory"]
+            handler: inventory_nested
+        inventory_nested:
+            type: rotating_file
+            path: "%kernel.logs_dir%/inventory.log"
+            level: debug
+            max_files: 1

@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="rsInventory" default="build" basedir=".">
+
+    <target name="build" depends="vars, copy, config, composer, permissions, cache, migrations, symlink"/>
+
+
+    <target name="vars">
+        <resolvepath propertyName="source.dir" file="${project.basedir}"/>
+        <echo msg="Source dir is: ${source.dir}"/>
+
+        <resolvepath propertyName="www.dir" file="/var/www"/>
+        <echo msg="Nginx base dir is: ${www.dir}"/>
+
+        <property name="production.domain.name" value="${domainName}"/>
+        <echo msg="Production domain name: ${production.domain.name}"/>
+
+        <php function="date" returnProperty="build.time">
+            <param value="Y-m-d-H-i-s"/>
+        </php>
+        <echo msg="Build time: ${build.time}"/>
+
+        <resolvepath propertyName="target.build.dir" file="${www.dir}/${production.domain.name}/${build.time}"/>
+        <echo msg="Target BUILD dir is: ${target.build.dir}"/>
+
+        <resolvepath propertyName="target.project.dir" file="${www.dir}/${production.domain.name}/current"/>
+        <echo msg="Target PROJECT dir is: ${target.project.dir}"/>
+    </target>
+
+    <target name="copy">
+        <mkdir dir="${target.build.dir}"/>
+
+        <echo msg="Copy all files to build directory: ${target.build.dir}"/>
+        <copy todir="${target.build.dir}">
+            <fileset dir="${source.dir}">
+                <include name="**"/>
+                <exclude name=".env"/>
+                <exclude name=".idea/"/>
+                <exclude name="vendor/"/>
+                <exclude name="var/"/>
+                <exclude name="tmp/"/>
+            </fileset>
+        </copy>
+
+        <mkdir dir="${target.build.dir}/vendor"/>
+        <mkdir dir="${target.build.dir}/var/cache"/>
+        <mkdir dir="${target.build.dir}/var/log"/>
+        <mkdir dir="${target.build.dir}/tmp"/>
+    </target>
+
+    <target name="config">
+        <copy todir="${target.build.dir}" file="${source.dir}/.env.dist" overwrite="true">
+            <filterchain>
+                <replacetokens begintoken="{{" endtoken="}}">
+                    <token key="app.env" value="${app.env}"/>
+                    <token key="app.secret" value="${app.secret}"/>
+                </replacetokens>
+            </filterchain>
+        </copy>
+
+        <copy todir="${target.build.dir}/config" file="${source.dir}/config/services.yaml" overwrite="true">
+            <filterchain>
+                <replacetokens begintoken="{{" endtoken="}}">
+                    <token key="db.url.phpVDB" value="${db.url.phpVDB}"/>
+                    <token key="imp.resource" value="${imp.resource}"/>
+                    <token key="rser" value="${rser}"/>
+                    <token key="rser.login" value="${rser.login}"/>
+                    <token key="rser.pass" value="${rser.pass}"/>
+                </replacetokens>
+            </filterchain>
+        </copy>
+    </target>
+
+    <target name="composer">
+        <echo msg="Installing composer depedencies..." />
+        <exec command="composer install" dir="${target.build.dir}" passthru="true" />
+    </target>
+
+    <target name="cache">
+        <echo msg="Cache is warmuping..."/>
+        <exec command="php bin/console cache:warmup" dir="${target.build.dir}"/>
+    </target>
+
+    <target name="migrations">
+        <echo msg="Applying migrations..." />
+        <exec command="php bin/console doctrine:migrations:migrate --no-interaction" dir="${target.build.dir}" passthru="true" />
+    </target>
+
+    <target name="permissions">
+        <exec command="chmod -R 777 ${target.build.dir}" />
+    </target>
+
+    <target name="symlink">
+        <symlink link="${target.project.dir}" target="${target.build.dir}" overwrite="true" />
+        <echo msg="Create symlink from bulid directory - ${target.build.dir} \n to - ${target.project.dir}" />
+    </target>
+
+</project>
