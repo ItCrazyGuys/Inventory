@@ -35,12 +35,6 @@ doctrine:
                         dir: '%kernel.project_dir%/src/Entity/Company'
                         prefix: 'App\Entity\Company'
                         alias: Company
-                    Contact_Book:
-                        is_bundle: false
-                        type: annotation
-                        dir: '%kernel.project_dir%/src/Entity/Contact_Book'
-                        prefix: 'App\Entity\Contact_Book'
-                        alias: Contact_Book
                     Equipment:
                         is_bundle: false
                         type: annotation
@@ -59,24 +53,6 @@ doctrine:
                         dir: '%kernel.project_dir%/src/Entity/Network'
                         prefix: 'App\Entity\Network'
                         alias: Network
-                    Partners:
-                        is_bundle: false
-                        type: annotation
-                        dir: '%kernel.project_dir%/src/Entity/Partners'
-                        prefix: 'App\Entity\Partners'
-                        alias: Partners
-                    Telefony:
-                        is_bundle: false
-                        type: annotation
-                        dir: '%kernel.project_dir%/src/Entity/Telefony'
-                        prefix: 'App\Entity\Telefony'
-                        alias: Telefony
-                    View:
-                        is_bundle: false
-                        type: annotation
-                        dir: '%kernel.project_dir%/src/Entity/View'
-                        prefix: 'App\Entity\View'
-                        alias: View
                     Storage_1C:
                         is_bundle: false
                         type: annotation
