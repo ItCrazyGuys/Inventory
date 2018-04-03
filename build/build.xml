@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="rsInventory" default="build" basedir=".">
 
-    <target name="build" depends="vars, copy, config, composer, permissions, cache, migrations, symlink"/>
+    <target name="build" depends="vars, copy, config, composer, cache, migrations, permissions, symlink"/>
 
 
     <target name="vars">
@@ -72,17 +72,17 @@
 
     <target name="composer">
         <echo msg="Installing composer depedencies..." />
-        <exec command="composer install" dir="${target.build.dir}" passthru="true" />
+        <exec command="composer install" dir="${target.build.dir}" checkreturn="true" passthru="true"/>
     </target>
 
     <target name="cache">
         <echo msg="Cache is warmuping..."/>
-        <exec command="php bin/console cache:warmup" dir="${target.build.dir}"/>
+        <exec command="php bin/console cache:warmup" dir="${target.build.dir}" checkreturn="true"/>
     </target>
 
     <target name="migrations">
         <echo msg="Applying migrations..." />
-        <exec command="php bin/console doctrine:migrations:migrate --no-interaction" dir="${target.build.dir}" passthru="true" />
+        <exec command="php bin/console doctrine:migrations:migrate --no-interaction" dir="${target.build.dir}" checkreturn="true" passthru="true"/>
     </target>
 
     <target name="permissions">
