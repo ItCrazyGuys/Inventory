@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="rsInventory" default="build" basedir=".">
 
-    <target name="build" depends="vars, copy, config, composer, cache, migrations, permissions, symlink"/>
+    <target name="build" depends="vars, copy, config, composer, cache, migrations, symlink"/>
 
 
     <target name="vars">
@@ -83,10 +83,6 @@
     <target name="migrations">
         <echo msg="Applying migrations..." />
         <exec command="php bin/console doctrine:migrations:migrate --no-interaction" dir="${target.build.dir}" checkreturn="true" passthru="true"/>
-    </target>
-
-    <target name="permissions">
-        <exec command="chmod -R 777 ${target.build.dir}" />
     </target>
 
     <target name="symlink">
