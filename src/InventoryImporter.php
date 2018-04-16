@@ -93,7 +93,7 @@ class InventoryImporter
                             // select the street
                             $street = preg_replace('~ .+~', '', $addressTitle);
                             // select the buildingNumber
-                            $building = preg_match('~[\d]+~', $addressTitle, $buildingNumber);
+                            preg_match('~[\d]+~', $addressTitle, $buildingNumber);
 
                             $isEqualStreet = (1 == preg_match('~'.$street.'~', mb_strtolower($address->getAddress())));
                             $isEqualBuildingNumber = false;
@@ -127,7 +127,6 @@ class InventoryImporter
 
             // Define InventoryItem1C
             $inventoryItem1C = $this->em->getRepository('Storage_1C:InventoryItem1C')->findOneBy(['inventoryNumber' => $item['inventoryNumber']]);
-            $isInventoryItemNew = true;
             if (is_null($inventoryItem1C)) {
                 // Create new Appliance1C
                 $inventoryItem1C = new InventoryItem1C();
@@ -144,7 +143,6 @@ class InventoryImporter
                 $inventoryItem1C->setLastUpdate(new \DateTime('now', new \DateTimeZone('UTC')));
             } else {
                 // Update exist Appliance1C
-                $isInventoryItemNew = false;
                 if ($inventoryItem1C->getSerialNumber() != $item['serialNumber']) {
                     $inventoryItem1C->setSerialNumber($item['serialNumber']);
                 }
@@ -163,112 +161,145 @@ class InventoryImporter
                 $inventoryItem1C->setLastUpdate(new \DateTime('now', new \DateTimeZone('UTC')));
             }
 
-            // Define Appliance1C or Module1C
-            if ($isInventoryItemNew) {
-                $voiceAppliance = null;
-                $voiceModule = null;
-                $isAppliance = false;
-                $isModule = false;
+            /// Define Appliance1C or Module1C
+            $voiceAppliance = null;
+            $voiceModule = null;
+            $isAppliance = false;
+            $isModule = false;
 
-                // Define voiceAppliances or voiceModules by serialNumber for a item1C
-                if ($item['serialNumber'] != self::EMPTY) {
-                    $serialNumber = mb_strtolower($item['serialNumber']);
-                    // ошибочный серийник (перед серийником стоит символ S или &), получаемый со сканера шрих-кодов.
-                    $washedSerialNumber = (1 == preg_match('~^(s|&)~', $serialNumber)) ? preg_replace('~^(s|&)~', '', $serialNumber) : null;
+            // Define voiceAppliances or voiceModules by serialNumber for a item1C
+            if ($item['serialNumber'] != self::EMPTY) {
+                $serialNumber = mb_strtolower($item['serialNumber']);
+                // ошибочный серийник (перед серийником стоит символ S или &), получаемый со сканера шрих-кодов.
+                $washedSerialNumber = (1 == preg_match('~^(s|&)~', $serialNumber)) ? preg_replace('~^(s|&)~', '', $serialNumber) : null;
 
-                    // search for a item1C in the voiceAppliances
-                    $voiceAppliance = $this->em->getRepository('Equipment:Appliance')->findOneBySerialNumber($serialNumber);
-                    if (is_null($voiceAppliance) && !is_null($washedSerialNumber)) {
-                        $voiceAppliance = $this->em->getRepository('Equipment:Appliance')->findOneBySerialNumber($washedSerialNumber);
+                // search for a item1C in the voiceAppliances
+                $voiceAppliance = $this->em->getRepository('Equipment:Appliance')->findOneBySerialNumber($serialNumber);
+                if (is_null($voiceAppliance) && !is_null($washedSerialNumber)) {
+                    $voiceAppliance = $this->em->getRepository('Equipment:Appliance')->findOneBySerialNumber($washedSerialNumber);
+                }
+
+                // if voiceAppliance does not found, then search for a item1C in the voiceModules
+                if (is_null($voiceAppliance)) {
+                    $voiceModule = $this->em->getRepository('Equipment:ModuleItem')->findOneBySerialNumber($serialNumber);
+                    if (is_null($voiceModule) && !is_null($washedSerialNumber)) {
+                        $voiceModule = $this->em->getRepository('Equipment:ModuleItem')->findOneBySerialNumber($washedSerialNumber);
                     }
+                }
+            }
 
-                    // if voiceAppliance does not found, then search for a item1C in the voiceModules
-                    if (is_null($voiceAppliance)) {
-                        $voiceModule = $this->em->getRepository('Equipment:ModuleItem')->findOneBySerialNumber($serialNumber);
-                        if (is_null($voiceModule) && !is_null($washedSerialNumber)) {
-                            $voiceModule = $this->em->getRepository('Equipment:ModuleItem')->findOneBySerialNumber($washedSerialNumber);
-                        }
+            // Define InventoryItemCategory
+            if (!is_null($voiceAppliance)) {
+                $isAppliance = true;
+            } elseif (!is_null($voiceModule)) {
+                $isModule = true;
+            } else {
+                // define a category by word patterns
+                $moodulePattern = ['module'];
+                foreach ($moodulePattern as $moodulePatter) {
+                    if (1 == preg_match('~' . $moodulePatter . '~', mb_strtolower($item['nomenclature']))) {
+                        $isModule = true;
+                        break;
                     }
                 }
 
-                // Define InventoryItemCategory
-                if (!is_null($voiceAppliance)) {
-                    $isAppliance = true;
-                } elseif (!is_null($voiceModule)) {
-                    $isModule = true;
-                } else {
-                    // define a category by word patterns
-                    $moodulePattern = ['module'];
-                    foreach ($moodulePattern as $moodulePatter) {
-                        if (1 == preg_match('~' . $moodulePatter . '~', mb_strtolower($item['nomenclature']))) {
-                            $isModule = true;
+                if (!$isModule) {
+                    $appliancePatterns = [
+                        'catalyst',
+                        'маршрутизатор',
+                        'коммутатор',
+                        'телефон',
+                        'шлюз',
+                    ];
+                    foreach ($appliancePatterns as $appliancePattern) {
+                        if (1 == preg_match('~' . $appliancePattern . '~', mb_strtolower($item['nomenclature']))) {
+                            $isAppliance = true;
                             break;
                         }
                     }
-
-                    if (!$isModule) {
-                        $appliancePatterns = [
-                            'catalyst',
-                            'маршрутизатор',
-                            'коммутатор',
-                            'телефон',
-                            'шлюз',
-                        ];
-                        foreach ($appliancePatterns as $appliancePattern) {
-                            if (1 == preg_match('~' . $appliancePattern . '~', mb_strtolower($item['nomenclature']))) {
-                                $isAppliance = true;
-                                break;
-                            }
-                        }
-                    }
                 }
+            }
 
-                // Define Appliance1C or Module1C
-                if ($isAppliance) {
-                    $inventoryItem1C->setCategory($this->em->getRepository('Storage_1C:InventoryItemCategory')->getApplianceCategory());
+            // Define Appliance1C or Module1C
+            if ($isAppliance) {
+                $inventoryItem1C->setCategory($this->em->getRepository('Storage_1C:InventoryItemCategory')->getApplianceCategory());
+                $isSetVoiceAppliance = false;
 
+                // find Appliance1C by InventoryItem1C
+                $appliance1C = $this->em->getRepository('Storage_1C:Appliance1C')->findOneBy(['inventoryData' => $inventoryItem1C]);
+                if (is_null($appliance1C)) {
                     // create new Appliance1C
                     $appliance1C = new Appliance1C();
                     $appliance1C->setInventoryData($inventoryItem1C);
-                    // set voiceAppliance
                     if (!is_null($voiceAppliance)) {
-                        // duplicate check
-                        $duplicateAppliance1C = $this->em->getRepository('Storage_1C:Appliance1C')->findOneByVoiceAppliance($voiceAppliance);
-                        if (is_null($duplicateAppliance1C)) {
-                            // no duplicate
-                            $appliance1C->setVoiceAppliance($voiceAppliance);
-                        } else {
-                            // log duplicate error
-                            $message = 'Inventory number ' . $item['inventoryNumber'] . ' (serial ' . $item['serialNumber'] . ') has duplicate ' . $duplicateAppliance1C->getInventoryData()->getInventoryNumber() . ' (serial ' . $duplicateAppliance1C->getInventoryData()->getSerialNumber() . ')';
-                            $this->logger->error($message);
-                        }
+                        $isSetVoiceAppliance = true;
                     }
                     $this->em->persist($appliance1C);
+                } elseif (is_null($appliance1C->getVoiceAppliance()) && !is_null($voiceAppliance)) {
+                    // update Appliance1C
+                    $isSetVoiceAppliance = true;
+                } elseif (!is_null($appliance1C->getVoiceAppliance()) && !is_null($voiceAppliance) && $appliance1C->getVoiceAppliance()->getId() != $voiceAppliance->getId()) {
+                    // update Appliance1C
+                    $isSetVoiceAppliance = true;
+                } elseif (!is_null($appliance1C->getVoiceAppliance() && is_null($voiceAppliance))) {
+                    // update Appliance1C
+                    $appliance1C->setVoiceAppliance($voiceAppliance);
+                }
+                // set voiceAppliance
+                if ($isSetVoiceAppliance) {
+                    // duplicate check
+                    $duplicateAppliance1C = $this->em->getRepository('Storage_1C:Appliance1C')->findOneByVoiceAppliance($voiceAppliance);
+                    if (is_null($duplicateAppliance1C)) {
+                        // no duplicate
+                        $appliance1C->setVoiceAppliance($voiceAppliance);
+                    } else {
+                        // log duplicate error
+                        $message = 'Inventory number ' . $item['inventoryNumber'] . ' (serial ' . $item['serialNumber'] . ') has duplicate ' . $duplicateAppliance1C->getInventoryData()->getInventoryNumber() . ' (serial ' . $duplicateAppliance1C->getInventoryData()->getSerialNumber() . ')';
+                        $this->logger->error($message);
+                    }
+                }
 
-                } elseif ($isModule) {
-                    $inventoryItem1C->setCategory($this->em->getRepository('Storage_1C:InventoryItemCategory')->getModuleCategory());
+            } elseif ($isModule) {
+                $inventoryItem1C->setCategory($this->em->getRepository('Storage_1C:InventoryItemCategory')->getModuleCategory());
+                $isSetVoiceModule = false;
 
+                // find Module1C by InventoryItem1C
+                $module1C = $this->em->getRepository('Storage_1C:Module1C')->findOneBy(['inventoryData' => $inventoryItem1C]);
+                if (is_null($module1C)) {
                     // create new Module1C
                     $module1C = new Module1C();
                     $module1C->setInventoryData($inventoryItem1C);
                     if (!is_null($voiceModule)) {
-                        // duplicate check
-                        $duplicateModule1C = $this->em->getRepository('Storage_1C:Module1C')->findOneByVoiceModule($voiceModule);
-                        if (is_null($duplicateModule1C)) {
-                            // no duplicate
-                            $module1C->setVoiceModule($voiceModule);
-                        } else {
-                            // log duplicate error
-                            $message = 'Inventory number ' . $item['inventoryNumber'] . ' (serial ' . $item['serialNumber'] . ') has duplicate ' . $duplicateModule1C->getInventoryData()->getInventoryNumber() . ' (serial ' . $duplicateModule1C->getInventoryData()->getSerialNumber() . ')';
-                            $this->logger->error($message);
-                        }
+                        $isSetVoiceModule = true;
                     }
                     $this->em->persist($module1C);
-
-                } else {
-                    // set 'AutomaticallyUndefine' for inventoryItem1C
-                    $inventoryItem1C->setCategory($this->em->getRepository('Storage_1C:InventoryItemCategory')->getAutomaticallyUndefineCategory());
+                } elseif (is_null($module1C->getVoiceModule()) && !is_null($voiceModule)) {
+                    // update Module1C
+                    $isSetVoiceModule = true;
+                } elseif (!is_null($module1C->getVoiceModule()) && !is_null($voiceModule) && $module1C->getVoiceModule()->getId() != $voiceModule->getId()) {
+                    // update Module1C
+                    $isSetVoiceModule = true;
+                } elseif (!is_null($module1C->getVoiceModule() && is_null($voiceModule))) {
+                    // update Module1C
+                    $module1C->setVoiceModule($voiceModule);
                 }
+                // set voiceModule
+                if ($isSetVoiceModule) {
+                    // duplicate check
+                    $duplicateModule1C = $this->em->getRepository('Storage_1C:Module1C')->findOneByVoiceModule($voiceModule);
+                    if (is_null($duplicateModule1C)) {
+                        // no duplicate
+                        $module1C->setVoiceModule($voiceModule);
+                    } else {
+                        // log duplicate error
+                        $message = 'Inventory number ' . $item['inventoryNumber'] . ' (serial ' . $item['serialNumber'] . ') has duplicate ' . $duplicateModule1C->getInventoryData()->getInventoryNumber() . ' (serial ' . $duplicateModule1C->getInventoryData()->getSerialNumber() . ')';
+                        $this->logger->error($message);
+                    }
+                }
+
+            } else {
+                // set 'AutomaticallyUndefine' for inventoryItem1C
+                $inventoryItem1C->setCategory($this->em->getRepository('Storage_1C:InventoryItemCategory')->getAutomaticallyUndefineCategory());
             }
 
             $this->em->flush();
