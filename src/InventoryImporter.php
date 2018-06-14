@@ -5,6 +5,7 @@ namespace App;
 use App\Entity\Storage_1C\Appliance1C;
 use App\Entity\Storage_1C\InventoryItem1C;
 use App\Entity\Storage_1C\Module1C;
+use App\Entity\View\IInventoryItem1C;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -14,16 +15,148 @@ class InventoryImporter
     private const OUT_CHARSET = 'UTF-8';
     private const HEADER = 'ИнвентарнаяЕдиница';
     private const EMPTY = '';
+    private const INPUT_DATA_SIZE = 9;
+    private const GEOLOCATION_DATA_SIZE = 4;
 
     private $em;
     private $logger;
 
-
-
+    /**
+     * InventoryImporter constructor.
+     */
     public function __construct(EntityManagerInterface $em, LoggerInterface $inventoryLogger)
     {
         $this->em = $em;
         $this->logger = $inventoryLogger;
+    }
+
+
+    public function iFCsv(string $line = null)
+    {
+        $line = ';;;;;;;;';
+        $line = '82016;;Телефон Cisco 7905G (без блока питания);;МБП;;;;';
+        $line = '369873;SPXN161906B3;Телефон Cisco 6921 (без блока питания);15.08.2012 0:00:00;МБП;;;;';
+        $line = '415949;FCH16439C50;Телефон Cisco 7942G (без блока питания);29.04.2013 0:00:00;МБП;Малчевский А.Л.;29387734614;Воронежский РО, г.Воронеж, Текстильщиков д. 2И, место хранения ТМЦ (Головной офис Воронеж);131465';
+
+        // Prepare input data
+        $inventoryInputItem = $this->prepareInputData($line);
+        dump($inventoryInputItem);  // todo delete
+
+        // Find InventoryRecord
+        $inventoryRecord = $this->findInventoryRecordByInventoryNumber($inventoryInputItem['inventoryNumber']);
+        dump($inventoryRecord); // todo delete
+        if (false === $inventoryRecord) {
+            $this->createInventoryItem1C($inventoryInputItem);
+        } else {
+            $this->updateInventoryItem1C($inventoryInputItem, $inventoryRecord);
+        }
+    }
+
+
+    private function updateInventoryItem1C(array $inventoryInputItem, IInventoryItem1C $inventoryRecord)
+    {
+        // update inventoryItem1C
+        $inventoryItem1C = $this->em->getRepository('Storage_1C:InventoryItem1C')->find($inventoryRecord->getInvItemId());
+        $this->em->persist($inventoryItem1C);
+        // update inventoryItem1C->serialNumber
+        $inventoryItem1C->setSerialNumber($inventoryInputItem['serialNumber']);
+        // update inventoryItem1C->dateOfRegistration
+        if (!empty($inventoryInputItem['dateOfRegistration'])) {
+            $inventoryItem1C->setDateOfRegistration($inventoryInputItem['dateOfRegistration']);
+        }
+        // set inventoryItem1C->setLastUpdate
+        $inventoryItem1C->setLastUpdate(new \DateTime('now', new \DateTimeZone('UTC')));
+
+        dump($inventoryItem1C); // todo delete
+    }
+
+
+
+    private function createInventoryItem1C(array $inventoryInputItem)
+    {
+        // todo доделать
+        $inventoryItem1C = new InventoryItem1C();
+        $this->em->persist($inventoryItem1C);
+
+        $inventoryItem1C->setInventoryNumber($inventoryInputItem['inventoryNumber']);
+        $inventoryItem1C->setSerialNumber($inventoryInputItem['serialNumber']);
+        if (!empty($inventoryInputItem['dateOfRegistration'])) {
+            $inventoryItem1C->setDateOfRegistration($inventoryInputItem['dateOfRegistration']);
+        }
+        $inventoryItem1C->setLastUpdate(new \DateTime('now', new \DateTimeZone('UTC')));
+
+        dump($inventoryItem1C); // todo delete
+    }
+
+    /**
+     * @param string $inventoryNumber
+     * @return Entity\View\DevAppliance1C|Entity\View\DevModule1C|bool
+     */
+    private function findInventoryRecordByInventoryNumber(string $inventoryNumber)
+    {
+        $inventoryRecord = $this->em->getRepository('View:DevAppliance1C')->findOneBy(['invItem_inventoryNumber' => $inventoryNumber]);
+        if (is_null($inventoryRecord)) {
+            $inventoryRecord = $this->em->getRepository('View:DevModule1C')->findOneBy(['invItem_inventoryNumber' => $inventoryNumber]);
+        }
+        if (is_null($inventoryRecord)) {
+            $inventoryRecord = false;
+        }
+        return $inventoryRecord;
+    }
+
+    /**
+     * @param string $line
+     * @return array
+     * @throws \Exception
+     */
+    private function prepareInputData(string $line): array
+    {
+        // Select item1C's data from a line
+//        $line = trim(iconv(self::IN_CHARSET, self::OUT_CHARSET, $line)); // todo раскоментировать
+        $data = array_map(
+            function ($item) { return trim($item); },
+            str_getcsv($line, ';')
+        );
+
+        // Prepare input data
+        if (self::INPUT_DATA_SIZE != count($data)) {
+            throw new \Exception('Not valid data: '. $line);
+        }
+        $item['inventoryNumber'] = empty($data[0]) ? self::EMPTY : $data[0];
+        if (empty($item['inventoryNumber'])) {
+            throw new \Exception('Does not have an inventory number: '. $line);
+        }
+        $item['serialNumber'] = empty($data[1]) ? self::EMPTY : $data[1];
+        $item['nomenclature'] = empty($data[2]) ? self::EMPTY : $data[2];
+        $item['dateOfRegistration'] = empty($data[3]) ? self::EMPTY : new \DateTime($data[3], new \DateTimeZone('UTC'));
+        $item['typeOfNomenclature'] = empty($data[4]) ? self::EMPTY : $data[4];
+        $item['mol'] = empty($data[5]) ? self::EMPTY : $data[5];
+        $item['roomsCode'] = empty($data[6]) ? self::EMPTY : $data[6];
+        $item['rooms'] = empty($data[7]) ? self::EMPTY : $data[7];
+        $item['molTabNumber'] = empty($data[8]) ? self::EMPTY : $data[8];
+        $item['roomsTitle'] = self::EMPTY;
+        $item['regionTitle'] = self::EMPTY;
+        $item['cityTitle'] = self::EMPTY;
+        $item['addressTitle'] = self::EMPTY;
+        if (self::EMPTY != $item['rooms']) {
+            $geolocationData = array_map(
+                function ($item) { return trim($item); },
+                explode(',', $item['rooms'])
+            );
+            if (self::GEOLOCATION_DATA_SIZE == count($geolocationData)) {
+                $item['regionTitle'] = $geolocationData[0];
+                $item['cityTitle'] = mb_ereg_replace('г\.', '', $geolocationData[1]);
+                $item['addressTitle'] = $geolocationData[2]. ', '. trim(mb_ereg_replace('\(.*\)', '', $geolocationData[3]));
+
+                $matches = [];
+                mb_ereg('\(.*\)', $geolocationData[3], $matches);
+                if (!empty($matches)) {
+                    $item['roomsTitle'] = $matches[0];
+                    $item['roomsTitle'] = trim(mb_ereg_replace('\(|\)', '', $item['roomsTitle']));
+                }
+            }
+        }
+        return $item;
     }
 
 

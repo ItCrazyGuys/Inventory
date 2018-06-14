@@ -59,3 +59,9 @@ doctrine:
                         dir: '%kernel.project_dir%/src/Entity/Storage_1C'
                         prefix: 'App\Entity\Storage_1C'
                         alias: Storage_1C
+                    View:
+                        is_bundle: false
+                        type: annotation
+                        dir: '%kernel.project_dir%/src/Entity/View'
+                        prefix: 'App\Entity\View'
+                        alias: View

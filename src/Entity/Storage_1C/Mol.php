@@ -37,7 +37,7 @@ class Mol
     /**
      * @ORM\OneToMany(targetEntity="App\Entity\Storage_1C\InventoryItem1C", mappedBy="mol", fetch="EXTRA_LAZY")
      */
-    private $inventoryItem1C;
+    private $inventoryItems1C;
 
     /**
      * @ORM\ManyToMany(targetEntity="App\Entity\Storage_1C\Rooms1C", inversedBy="mols", fetch="EXTRA_LAZY")
@@ -52,7 +52,7 @@ class Mol
 
     public function __construct()
     {
-        $this->inventoryItem1C = new ArrayCollection();
+        $this->inventoryItems1C = new ArrayCollection();
         $this->rooms1C = new ArrayCollection();
     }
 
@@ -99,9 +99,9 @@ class Mol
     /**
      * @return ArrayCollection|InventoryItem1C[]
      */
-    public function getInventoryItem1C()
+    public function getInventoryItems1C()
     {
-        return $this->inventoryItem1C;
+        return $this->inventoryItems1C;
     }
 
     /**

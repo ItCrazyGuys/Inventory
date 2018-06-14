@@ -19,6 +19,8 @@ class Db1cImportInventoryCommand extends ContainerAwareCommand
     private $importer1C;
     private $logger;
 
+    private const MEMORY_LIMIT = '1024M';
+    private const ENV_DEV = 'dev';
 
 
     public function __construct(InventoryImporter $inventoryImporter, Importer1C $importer1C, $importedCsvResource, LoggerInterface $inventoryLogger)
@@ -37,6 +39,10 @@ class Db1cImportInventoryCommand extends ContainerAwareCommand
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        if (self::ENV_DEV == getenv('APP_ENV')) {
+            ini_set('memory_limit', self::MEMORY_LIMIT);
+        }
+
         $io = new SymfonyStyle($input, $output);
         $isSuccess = true;
 
@@ -51,8 +57,13 @@ class Db1cImportInventoryCommand extends ContainerAwareCommand
                     throw new \Exception('Entity manager close');
                 }
 
+                $s = microtime(true); // todo delete
+
                 // read line from file and import csv
                 $this->inventoryImporter->importFromCsv(fgets($resource));
+
+                $e = microtime(true); // todo delete
+                dump($e - $s); // todo delete
             }
             // Close tmp csv file
             fclose($resource);
