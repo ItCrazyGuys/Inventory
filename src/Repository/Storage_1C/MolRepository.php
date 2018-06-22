@@ -9,7 +9,7 @@ use Symfony\Bridge\Doctrine\RegistryInterface;
 class MolRepository extends ServiceEntityRepository
 {
     private const EMPTY = '';
-    private const EMPTY_TAB_NUMBER = -1;
+    const EMPTY_TAB_NUMBER = -1;
 
 
     public function __construct(RegistryInterface $registry)

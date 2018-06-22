@@ -30,6 +30,11 @@ class Rooms1C
     private $roomsCode;
 
     /**
+     * @ORM\Column(type="text")
+     */
+    private $title;
+
+    /**
      * @ORM\ManyToOne(targetEntity="App\Entity\Storage_1C\RoomsType", fetch="EXTRA_LAZY")
      * @ORM\JoinColumn(name="__type_id", referencedColumnName="__id")
      */
@@ -193,4 +198,21 @@ class Rooms1C
     {
         $this->type = $type;
     }
+
+    /**
+     * @return mixed
+     */
+    public function getTitle()
+    {
+        return $this->title;
+    }
+
+    /**
+     * @param mixed $title
+     */
+    public function setTitle($title)
+    {
+        $this->title = $title;
+    }
 }
+

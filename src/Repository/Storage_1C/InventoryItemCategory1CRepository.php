@@ -8,6 +8,7 @@ use Symfony\Bridge\Doctrine\RegistryInterface;
 
 class InventoryItemCategory1CRepository extends ServiceEntityRepository
 {
+    private const EMPTY = '';
     private const APPLIANCE = 'appliance';
     private const MODULE = 'module';
     private const AUTOMATICALLY_UNDEFINE = 'automaticallyUndefined';
@@ -17,6 +18,21 @@ class InventoryItemCategory1CRepository extends ServiceEntityRepository
     public function __construct(RegistryInterface $registry)
     {
         parent::__construct($registry, InventoryItemCategory::class);
+    }
+
+
+    /**
+     * @return InventoryItemCategory
+     */
+    public function getEmptyInstance(): InventoryItemCategory
+    {
+        $category = self::findOneBy(['title' => self::EMPTY]);
+        if (is_null($category)) {
+            $category = new InventoryItemCategory();
+            $category->setTitle(self::EMPTY);
+            self::getEntityManager()->persist($category);
+        }
+        return $category;
     }
 
     /**

@@ -107,6 +107,11 @@ class DevModule1C implements IInventoryItem1C
     private $rooms1C_roomsCode;
 
     /**
+     * @ORM\Column(name="`rooms1C_title`", type="string")
+     */
+    private $rooms1C_title;
+
+    /**
      * @ORM\Column(name="`rooms1C_address`", type="string")
      */
     private $rooms1C_address;
@@ -376,5 +381,13 @@ class DevModule1C implements IInventoryItem1C
     public function getRegion1CTitle()
     {
         return $this->region1C_title;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getRooms1CTitle()
+    {
+        return $this->rooms1C_title;
     }
 }

@@ -4,6 +4,7 @@ namespace App\Repository\Storage_1C;
 
 use App\Entity\Company\Office;
 use App\Entity\Storage_1C\City1C;
+use App\Entity\Storage_1C\Region1C;
 use App\Entity\Storage_1C\Rooms1C;
 use App\Entity\Storage_1C\RoomsType;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
@@ -39,32 +40,41 @@ class Rooms1CRepository extends ServiceEntityRepository
 
     /**
      * @param string $roomsCode
-     * @param City1C $city
-     * @param string $address
-     * @param RoomsType $roomsType
+     * @param string $roomsTitle
+     * @param string $regionTitle
+     * @param string $cityTitle
+     * @param string $addressTitle
      * @return Rooms1C
      */
-    public function getByRoomsCodeAndCityAndAddressAndType(string $roomsCode, City1C $city, string $address, RoomsType $roomsType): Rooms1C
+    public function getInstance(string $roomsCode, string $roomsTitle, string $regionTitle, string $cityTitle, string $addressTitle): Rooms1C
     {
+        $region = self::getEntityManager()->getRepository(Region1C::class)->getByTitle($regionTitle);
+        $city = self::getEntityManager()->getRepository(City1C::class)->getByTitleAndRegion($cityTitle, $region);
+        $roomsType = self::getEntityManager()->getRepository(RoomsType::class)->getByAddress($addressTitle);
+
         $rooms1C = self::findOneBy(['roomsCode' => $roomsCode]);
         if (is_null($rooms1C)) {
             // create new Rooms1C
             $rooms1C = new Rooms1C();
             $rooms1C->setRoomsCode($roomsCode);
-            $rooms1C->setAddress($address);
+            $rooms1C->setTitle($roomsTitle);
+            $rooms1C->setAddress($addressTitle);
             $rooms1C->setType($roomsType);
             $rooms1C->setCity1C($city);
             self::getEntityManager()->persist($rooms1C);
         } else {
             // update exist Rooms1C
-            if ($rooms1C->getCity1C()->getId() != $city->getId()) {
-                $rooms1C->setCity1C($city);
+            if ($rooms1C->getTitle() != $roomsTitle) {
+                $rooms1C->setTitle($roomsTitle);
             }
-            if ($rooms1C->getAddress() != $address) {
-                $rooms1C->setAddress($address);
+            if ($rooms1C->getAddress() != $addressTitle) {
+                $rooms1C->setAddress($addressTitle);
             }
             if ($rooms1C->getType()->getId() != $roomsType->getId()) {
                 $rooms1C->setType($roomsType);
+            }
+            if ($rooms1C->getCity1C()->getId() != $city->getId()) {
+                $rooms1C->setCity1C($city);
             }
         }
         return $rooms1C;

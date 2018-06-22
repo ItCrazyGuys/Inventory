@@ -5,26 +5,11 @@ namespace App\Entity\View;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @ORM\Entity(repositoryClass="App\Repository\View\DevAppliance1CRepository")
- * @ORM\Table(name="dev_appliance1c", schema="view")
+ * @ORM\Entity(repositoryClass="App\Repository\View\InvItem1CRepository")
+ * @ORM\Table(name="inventory_item1c", schema="view")
  */
-class DevAppliance1C implements IInventoryItem1C
+class InvItem1C implements IInventoryItem1C
 {
-    /**
-     * @ORM\Column(name="`appliance1C_id`", type="bigint")
-     */
-    private $appliance1C_id;
-
-    /**
-     * @ORM\Column(name="`appliance_id`", type="bigint")
-     */
-    private $appliance_id;
-
-    /**
-     * @ORM\Column(name="`appliance_serialNumber`", type="string")
-     */
-    private $appliance_serialNumber;
-
     /**
      * @ORM\Id
      * @ORM\Column(name="`invItem_id`", type="bigint")
@@ -158,30 +143,6 @@ class DevAppliance1C implements IInventoryItem1C
 
 
 
-
-    /**
-     * @return mixed
-     */
-    public function getAppliance1CId()
-    {
-        return $this->appliance1C_id;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getApplianceId()
-    {
-        return $this->appliance_id;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getApplianceSerialNumber()
-    {
-        return $this->appliance_serialNumber;
-    }
 
     /**
      * @return mixed

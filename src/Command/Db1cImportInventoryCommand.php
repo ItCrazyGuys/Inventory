@@ -2,8 +2,8 @@
 
 namespace App\Command;
 
-use App\InventoryImporter;
 use App\Utils\Importer1C;
+use App\Utils\ImporterInventoryItemsFrom1C;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputInterface;
@@ -14,18 +14,18 @@ class Db1cImportInventoryCommand extends ContainerAwareCommand
 {
     protected static $defaultName = 'db:1c:import-inventory';
 
-    private $inventoryImporter;
+    private const MEMORY_LIMIT = '1024M';
+    private const ENV_DEV = 'dev';
+
+    private $importerInventoryItemsFrom1C;
     private $importedCsvResource;
     private $importer1C;
     private $logger;
 
-    private const MEMORY_LIMIT = '1024M';
-    private const ENV_DEV = 'dev';
 
-
-    public function __construct(InventoryImporter $inventoryImporter, Importer1C $importer1C, $importedCsvResource, LoggerInterface $inventoryLogger)
+    public function __construct(ImporterInventoryItemsFrom1C $importerInventoryItemsFrom1C, Importer1C $importer1C, $importedCsvResource, LoggerInterface $inventoryLogger)
     {
-        $this->inventoryImporter = $inventoryImporter;
+        $this->importerInventoryItemsFrom1C = $importerInventoryItemsFrom1C;
         $this->importer1C = $importer1C;
         $this->importedCsvResource = $importedCsvResource;
         $this->logger = $inventoryLogger;
@@ -36,6 +36,7 @@ class Db1cImportInventoryCommand extends ContainerAwareCommand
     {
         $this->setDescription('Import 1C\'s data of inventorization');
     }
+
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
@@ -60,7 +61,7 @@ class Db1cImportInventoryCommand extends ContainerAwareCommand
                 $s = microtime(true); // todo delete
 
                 // read line from file and import csv
-                $this->inventoryImporter->importFromCsv(fgets($resource));
+                $this->importerInventoryItemsFrom1C->importFromCsv(fgets($resource));
 
                 $e = microtime(true); // todo delete
                 dump($e - $s); // todo delete
