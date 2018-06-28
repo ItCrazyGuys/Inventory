@@ -22,7 +22,7 @@ class Appliance1C
     private $id;
 
     /**
-     * @ORM\OneToOne(targetEntity="App\Entity\Storage_1C\InventoryItem1C", fetch="EAGER")
+     * @ORM\OneToOne(targetEntity="App\Entity\Storage_1C\InventoryItem1C", fetch="EXTRA_LAZY")
      * @ORM\JoinColumn(name="__inventory_item_id", referencedColumnName="__id", unique=true)
      */
     private $inventoryData;

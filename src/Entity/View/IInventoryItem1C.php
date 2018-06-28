@@ -24,10 +24,4 @@ interface IInventoryItem1C
     public function getRooms1CAddress();
     public function getOfficeId();
     public function getOfficeLotusId();
-    public function getRoomsTypesId();
-    public function getRoomsTypesType();
-    public function getCity1CId();
-    public function getCity1CTitle();
-    public function getRegion1CId();
-    public function getRegion1CTitle();
 }

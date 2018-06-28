@@ -2,8 +2,9 @@
 
 namespace App\Command;
 
-use App\Utils\Importer1C;
+use App\Utils\ImporterAppliance1CFrom1C;
 use App\Utils\ImporterInventoryItemsFrom1C;
+use App\Utils\ImportModule1CFrom1C;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputInterface;
@@ -14,20 +15,20 @@ class Db1cImportInventoryCommand extends ContainerAwareCommand
 {
     protected static $defaultName = 'db:1c:import-inventory';
 
-    private const MEMORY_LIMIT = '1024M';
+    private const MEMORY_LIMIT = '512M';
     private const ENV_DEV = 'dev';
 
     private $importerInventoryItemsFrom1C;
-    private $importedCsvResource;
-    private $importer1C;
+    private $importerAppliance1CFrom1C;
+    private $importerModule1CFrom1C;
     private $logger;
 
 
-    public function __construct(ImporterInventoryItemsFrom1C $importerInventoryItemsFrom1C, Importer1C $importer1C, $importedCsvResource, LoggerInterface $inventoryLogger)
+    public function __construct(ImporterInventoryItemsFrom1C $importerInventoryItemsFrom1C, ImporterAppliance1CFrom1C $importerAppliance1CFrom1C, ImportModule1CFrom1C $importerModule1CFrom1C, LoggerInterface $inventoryLogger)
     {
         $this->importerInventoryItemsFrom1C = $importerInventoryItemsFrom1C;
-        $this->importer1C = $importer1C;
-        $this->importedCsvResource = $importedCsvResource;
+        $this->importerAppliance1CFrom1C = $importerAppliance1CFrom1C;
+        $this->importerModule1CFrom1C = $importerModule1CFrom1C;
         $this->logger = $inventoryLogger;
         parent::__construct();
     }
@@ -45,40 +46,16 @@ class Db1cImportInventoryCommand extends ContainerAwareCommand
         }
 
         $io = new SymfonyStyle($input, $output);
-        $isSuccess = true;
 
         try {
-            // Get tmp csv file
-            $importedCsvResource = $this->importer1C->importCsvFromFTP($this->importedCsvResource);
 
-            // Open tmp csv file
-            $resource = fopen($importedCsvResource, 'r');
-            while (!feof($resource)) {
-                if (!$this->getContainer()->get('doctrine.orm.entity_manager')->isOpen()) {
-                    throw new \Exception('Entity manager close');
-                }
+            $this->importerInventoryItemsFrom1C->importFromCsv();
+            $this->importerAppliance1CFrom1C->import();
+            $this->importerModule1CFrom1C->import();
 
-                $s = microtime(true); // todo delete
-
-                // read line from file and import csv
-                $this->importerInventoryItemsFrom1C->importFromCsv(fgets($resource));
-
-                $e = microtime(true); // todo delete
-                dump($e - $s); // todo delete
-            }
-            // Close tmp csv file
-            fclose($resource);
-
-            // Delete tmp csv file
-            unlink($importedCsvResource);
+            $io->success('Data import completed successfully');
         } catch (\Throwable $e) {
             $this->logger->error($e->getMessage());
-            $isSuccess = false;
-        }
-
-        if ($isSuccess) {
-            $io->success('Data import completed successfully');
-        } else {
             $io->error('Data importing failed successfully');
         }
     }

@@ -36,13 +36,10 @@ services:
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
 
-    App\Command\Db1cImportInventoryCommand:
-        arguments:
-            $importedCsvResource: '%imported_1c_csv_resource%'
-
-    App\Utils\Importer1C:
-        arguments:
-            $remoteServerUrl: '%revote_server.url%'
-            $ftpLogin: '%revote_server.login%'
-            $ftpPass: '%revote_server.pass%'
-            $projectDir: '%kernel.project_dir%'
+    App\Utils\Resource1CProvider:
+            arguments:
+                $importedCsvResource: '%imported_1c_csv_resource%'
+                $remoteServerUrl: '%revote_server.url%'
+                $ftpLogin: '%revote_server.login%'
+                $ftpPass: '%revote_server.pass%'
+                $projectDir: '%kernel.project_dir%'

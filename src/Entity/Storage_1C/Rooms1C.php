@@ -35,18 +35,6 @@ class Rooms1C
     private $title;
 
     /**
-     * @ORM\ManyToOne(targetEntity="App\Entity\Storage_1C\RoomsType", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="__type_id", referencedColumnName="__id")
-     */
-    private $type;
-
-    /**
-     * @ORM\ManyToOne(targetEntity="App\Entity\Storage_1C\City1C", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="__city_1c_id", referencedColumnName="__id")
-     */
-    private $city1C;
-
-    /**
      * @ORM\Column(type="text")
      */
     private $address;
@@ -126,22 +114,6 @@ class Rooms1C
     }
 
     /**
-     * @return City1C
-     */
-    public function getCity1C()
-    {
-        return $this->city1C;
-    }
-
-    /**
-     * @param City1C $city1C
-     */
-    public function setCity1C(City1C $city1C)
-    {
-        $this->city1C = $city1C;
-    }
-
-    /**
      * @return ArrayCollection|Mol[]
      */
     public function getMols()
@@ -181,22 +153,6 @@ class Rooms1C
     public function setVoiceOffice($voiceOffice)
     {
         $this->voiceOffice = $voiceOffice;
-    }
-
-    /**
-     * @return RoomsType
-     */
-    public function getType()
-    {
-        return $this->type;
-    }
-
-    /**
-     * @param RoomsType $type
-     */
-    public function setType(RoomsType $type)
-    {
-        $this->type = $type;
     }
 
     /**

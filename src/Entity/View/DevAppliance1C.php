@@ -126,36 +126,6 @@ class DevAppliance1C implements IInventoryItem1C
      */
     private $office_lotusId;
 
-    /**
-     * @ORM\Column(name="`roomsTypes_id`", type="bigint")
-     */
-    private $roomsTypes_id;
-
-    /**
-     * @ORM\Column(name="`roomsTypes_type`", type="string")
-     */
-    private $roomsTypes_type;
-
-    /**
-     * @ORM\Column(name="`city1C_id`", type="bigint")
-     */
-    private $city1C_id;
-
-    /**
-     * @ORM\Column(name="`city1C_title`", type="string")
-     */
-    private $city1C_title;
-
-    /**
-     * @ORM\Column(name="`region1C_id`", type="bigint")
-     */
-    private $region1C_id;
-
-    /**
-     * @ORM\Column(name="`region1C_title`", type="string")
-     */
-    private $region1C_title;
-
 
 
 
@@ -333,54 +303,6 @@ class DevAppliance1C implements IInventoryItem1C
     public function getOfficeLotusId()
     {
         return $this->office_lotusId;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getRoomsTypesId()
-    {
-        return $this->roomsTypes_id;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getRoomsTypesType()
-    {
-        return $this->roomsTypes_type;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getCity1CId()
-    {
-        return $this->city1C_id;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getCity1CTitle()
-    {
-        return $this->city1C_title;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getRegion1CId()
-    {
-        return $this->region1C_id;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getRegion1CTitle()
-    {
-        return $this->region1C_title;
     }
 
     /**

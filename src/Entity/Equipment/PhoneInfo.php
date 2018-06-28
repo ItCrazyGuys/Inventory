@@ -168,7 +168,7 @@ class PhoneInfo
     private $unknownLocation;
 
     /**
-     * @ORM\OneToOne(targetEntity="App\Entity\Equipment\Appliance", fetch="LAZY")
+     * @ORM\OneToOne(targetEntity="App\Entity\Equipment\Appliance", fetch="EXTRA_LAZY")
      * @ORM\JoinColumn(name="__appliance_id", referencedColumnName="__id")
      */
     private $phone;

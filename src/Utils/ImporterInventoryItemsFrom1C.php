@@ -17,31 +17,64 @@ class ImporterInventoryItemsFrom1C
     private const HEADER = 'ИнвентарнаяЕдиница';
     private const EMPTY = '';
     private const INPUT_DATA_SIZE = 9;
-    private const GEOLOCATION_DATA_SIZE = 4;
     private const EQUAL_DATES = '000';
 
+    private $resource1CProvider;
     private $em;
     private $logger;
 
     /**
      * ImporterInventoryItemsFrom1C constructor.
      * @param EntityManagerInterface $em
-     * @param LoggerInterface $inventoryLogger
+     * @param LoggerInterface $logger
      */
-    public function __construct(EntityManagerInterface $em, LoggerInterface $inventoryLogger)
+    public function __construct(Resource1CProvider $resource1CProvider, EntityManagerInterface $em, LoggerInterface $logger)
     {
+        $this->resource1CProvider = $resource1CProvider;
         $this->em = $em;
-        $this->logger = $inventoryLogger;
+        $this->logger = $logger;
     }
 
+
+    public function importFromCsv()
+    {
+        $importedCsvResource = null;
+        $resource = null;
+
+        try {
+            // Get CSV Resource
+            $importedCsvResource = $this->resource1CProvider->getCsvFromFTP();
+
+            // Import CSV Resource
+            $resource = fopen($importedCsvResource, 'r');
+            while (!feof($resource)) {
+                if (!$this->em->isOpen()) {
+                    throw new \Exception('Entity manager close');
+                }
+
+                $this->import(fgets($resource));
+            }
+            fclose($resource);
+
+            // Unlink CSV Resource
+            unlink($importedCsvResource);
+
+        } catch (\Throwable $e) {
+            if (!is_null($resource)) {
+                fclose($resource);
+            }
+            if (!is_null($importedCsvResource)) {
+                unlink($importedCsvResource);
+            }
+        }
+    }
 
     /**
      * @param string $line
      */
-    public function importFromCsv(string $line)
+    private function import(string $line)
     {
         try {
-
             // Prepare input data
             $inventoryData = $this->prepareInputData($line);
 
@@ -74,16 +107,12 @@ class ImporterInventoryItemsFrom1C
         // Update Rooms1C
         if ($inventoryData['roomsCode'] != $invItem1CView->getRooms1CRoomsCode()
             || $inventoryData['roomsTitle'] != $invItem1CView->getRooms1CTitle()
-            || $inventoryData['regionTitle'] != $invItem1CView->getRegion1CTitle()
-            || $inventoryData['cityTitle'] != $invItem1CView->getCity1CTitle()
-            || $inventoryData['addressTitle'] != $invItem1CView->getRooms1CAddress()
+            || $inventoryData['roomsAddress'] != $invItem1CView->getRooms1CAddress()
         ) {
             $rooms = $this->em->getRepository(Rooms1C::class)->getInstance(
                 $inventoryData['roomsCode'],
                 $inventoryData['roomsTitle'],
-                $inventoryData['regionTitle'],
-                $inventoryData['cityTitle'],
-                $inventoryData['addressTitle']
+                $inventoryData['roomsAddress']
             );
             $inventoryItem1C->setRooms1C($rooms);
         }
@@ -144,9 +173,7 @@ class ImporterInventoryItemsFrom1C
         $rooms = $this->em->getRepository(Rooms1C::class)->getInstance(
             $inventoryData['roomsCode'],
             $inventoryData['roomsTitle'],
-            $inventoryData['regionTitle'],
-            $inventoryData['cityTitle'],
-            $inventoryData['addressTitle']
+            $inventoryData['roomsAddress']
         );
 
         // Define Mol
@@ -209,32 +236,19 @@ class ImporterInventoryItemsFrom1C
         }
         $item['serialNumber'] = empty($data[1]) ? self::EMPTY : $data[1];
         $item['nomenclature'] = empty($data[2]) ? self::EMPTY : $data[2];
-        $item['dateOfRegistration'] = empty($data[3]) ? self::EMPTY : new \DateTime($data[3], new \DateTimeZone('UTC'));
         $item['typeOfNomenclature'] = empty($data[4]) ? self::EMPTY : $data[4];
+        $item['dateOfRegistration'] = empty($data[3]) ? self::EMPTY : new \DateTime($data[3], new \DateTimeZone('UTC'));
         $item['mol'] = empty($data[5]) ? self::EMPTY : $data[5];
-        $item['roomsCode'] = empty($data[6]) ? self::EMPTY : $data[6];
-        $item['rooms'] = empty($data[7]) ? self::EMPTY : $data[7];
         $item['molTabNumber'] = empty($data[8]) ? self::EMPTY : $data[8];
-        $item['roomsTitle'] = self::EMPTY;
-        $item['regionTitle'] = self::EMPTY;
-        $item['cityTitle'] = self::EMPTY;
-        $item['addressTitle'] = self::EMPTY;
-        if (self::EMPTY != $item['rooms']) {
-            $geolocationData = array_map(
-                function ($item) { return trim($item); },
-                explode(',', $item['rooms'])
-            );
-            if (self::GEOLOCATION_DATA_SIZE == count($geolocationData)) {
-                $item['regionTitle'] = $geolocationData[0];
-                $item['cityTitle'] = mb_ereg_replace('г\.', '', $geolocationData[1]);
-                $item['addressTitle'] = $geolocationData[2]. ', '. trim(mb_ereg_replace('\(.*\)', '', $geolocationData[3]));
+        $item['roomsCode'] = empty($data[6]) ? self::EMPTY : $data[6];
+        $item['roomsAddress'] = empty($data[7]) ? self::EMPTY : $data[7];
 
-                $matches = [];
-                mb_ereg('\(.*\)', $geolocationData[3], $matches);
-                if (!empty($matches)) {
-                    $item['roomsTitle'] = $matches[0];
-                    $item['roomsTitle'] = trim(mb_ereg_replace('\(|\)', '', $item['roomsTitle']));
-                }
+        $item['roomsTitle'] = self::EMPTY;
+        if (self::EMPTY != $item['roomsAddress']) {
+            $matches = [];
+            mb_ereg('\([^\{|\)]+\)$', $item['roomsAddress'], $matches);
+            if (!empty($matches)) {
+                $item['roomsTitle'] = trim(mb_ereg_replace('\(|\)', '', $matches[0]));
             }
         }
         return $item;
