@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="rsInventory" default="build" basedir="..">
+    <target name="build" depends="vars, copy, config, composer, cache, permissions, symlink" />
+
+    <target name="vars">
+        <tstamp>
+            <format property="BUILD_TIME" pattern="yyyy-MM-dd-hh-mm-ss" locale="ru,RU"/>
+        </tstamp>
+        <property name="source.dir" location="${basedir}" />
+        <property name="target.base.dir" location="${www.dir}/${www.domain}" />
+        <property name="target.build.dir" location="${target.base.dir}/${BUILD_TIME}" />
+        <property name="target.project.dir" location="${target.base.dir}/current" />
+        <property name="config.env" value=".env" />
+        <property name="config.env.dist" value=".env.dist" />
+        <property name="config.services" value="config/services.yaml" />
+
+        <echo>*********************************************************</echo>
+        <echo>SOURCE dir: ${source.dir}</echo>
+        <echo>Target BUILD dir is: ${target.build.dir}</echo>
+        <echo>Target PROJECT dir is: ${target.project.dir}</echo>
+        <echo>*********************************************************</echo>
+    </target>
+
+    <target name="copy">
+        <mkdir dir="${target.build.dir}" />
+        <copy todir="${target.build.dir}" includeemptydirs="true">
+            <fileset dir="${basedir}">
+                <exclude name=".env" />
+                <exclude name=".idea/" />
+                <exclude name="vendor/" />
+                <exclude name="var/" />
+                <exclude name="tmp/" />
+            </fileset>
+        </copy>
+        <mkdir dir="${target.build.dir}/vendor" />
+        <mkdir dir="${target.build.dir}/var/cache" />
+        <mkdir dir="${target.build.dir}/var/log" />
+        <mkdir dir="${target.build.dir}/tmp" />
+    </target>
+
+    <target name="config">
+        <copy file="${source.dir}/${config.env.dist}" tofile="${target.build.dir}/${config.env}" overwrite="true">
+            <filterset>
+                <filter token="app.env" value="${app.env}" />
+                <filter token="app.secret" value="${app.secret}" />
+            </filterset>
+        </copy>
+
+        <copy file="${source.dir}/${config.services}" tofile="${target.build.dir}/${config.services}" overwrite="true">
+            <filterset>
+                <filter token="db.url.phpVDB" value="${db.url.phpVDB}" />
+                <filter token="imp.1c.csv.resource" value="${imp.1c.csv.resource}" />
+                <filter token="rser" value="${rser}" />
+                <filter token="rser.login" value="${rser.login}" />
+                <filter token="rser.pass" value="${rser.pass}" />
+            </filterset>
+        </copy>
+    </target>
+
+    <target name="composer">
+        <exec dir="${target.build.dir}" executable="composer" failonerror="true">
+            <arg value="install" />
+        </exec>
+    </target>
+
+    <target name="cache">
+        <exec dir="${target.build.dir}/bin" executable="php" failonerror="true">
+            <arg line="console cache:warmup" />
+        </exec>
+    </target>
+
+    <target name="permissions">
+        <exec dir="${target.build.dir}" executable="chmod" failonerror="true">
+            <arg line="-R 777 var" />
+        </exec>
+        <echo> [OK]</echo>
+    </target>
+
+    <target name="symlink">
+        <symlink link="${target.project.dir}" resource="${target.build.dir}" overwrite="true" failonerror="true" />
+        <echo> [OK] Create symlink: ${target.project.dir} --> ${target.build.dir}</echo>
+    </target>
+
+</project>

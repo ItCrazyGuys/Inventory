@@ -2,11 +2,11 @@
 # https://symfony.com/doc/current/best_practices/configuration.html#application-related-configuration
 parameters:
     locale: 'en'
-    database.url.phpVDB: '{{db.url.phpVDB}}'
-    imported_1c_csv_resource: '{{imp.resource}}'
-    revote_server.url: '{{rser}}'
-    revote_server.login: '{{rser.login}}'
-    revote_server.pass: '{{rser.pass}}'
+    database.url.phpVDB: '@db.url.phpVDB@'
+    imported_1c_csv_resource: '@imp.1c.csv.resource@'
+    remote_server.url: '@rser@'
+    remote_server.login: '@rser.login@'
+    remote_server.pass: '@rser.pass@'
 
 
 services:
@@ -39,7 +39,7 @@ services:
     App\Utils\Resource1CProvider:
             arguments:
                 $importedCsvResource: '%imported_1c_csv_resource%'
-                $remoteServerUrl: '%revote_server.url%'
-                $ftpLogin: '%revote_server.login%'
-                $ftpPass: '%revote_server.pass%'
+                $remoteServerUrl: '%remote_server.url%'
+                $ftpLogin: '%remote_server.login%'
+                $ftpPass: '%remote_server.pass%'
                 $projectDir: '%kernel.project_dir%'
