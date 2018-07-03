@@ -30,6 +30,7 @@
                 <exclude name="vendor/" />
                 <exclude name="var/" />
                 <exclude name="tmp/" />
+                <exclude name="build/" />
             </fileset>
         </copy>
         <mkdir dir="${target.build.dir}/vendor" />
@@ -71,7 +72,7 @@
 
     <target name="permissions">
         <exec dir="${target.build.dir}" executable="chmod" failonerror="true">
-            <arg line="-R 777 var" />
+            <arg line="-R 777 var/ tmp/" />
         </exec>
         <echo> [OK]</echo>
     </target>
