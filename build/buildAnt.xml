@@ -31,6 +31,7 @@
                 <exclude name="var/" />
                 <exclude name="tmp/" />
                 <exclude name="build/" />
+                <exclude name="${config.env.dist}" />
             </fileset>
         </copy>
         <mkdir dir="${target.build.dir}/vendor" />
