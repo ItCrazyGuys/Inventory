@@ -14,6 +14,11 @@ use Symfony\Component\Validator\Constraints as Assert;
  */
 class NomenclatureType
 {
+    const TYPE_MBP = 'МБП';
+    const TYPE_OC = 'ОС';
+
+
+
     /**
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="AUTO")

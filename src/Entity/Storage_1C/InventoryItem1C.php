@@ -21,7 +21,7 @@ class InventoryItem1C
     private $id;
 
     /**
-     * @ORM\Column(name="`inventoryNumber`", type="string", unique=true)
+     * @ORM\Column(name="`inventoryNumber`", type="string")
      * @Assert\NotNull()
      * @Assert\Length(max="255")
      */

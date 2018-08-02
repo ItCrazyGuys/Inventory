@@ -4,6 +4,7 @@ namespace App\Utils;
 
 use App\Entity\Storage_1C\InventoryItem1C;
 use App\Entity\Storage_1C\InventoryItemCategory;
+use App\Entity\Storage_1C\NomenclatureType;
 use App\Entity\Storage_1C\Rooms1C;
 use App\Entity\View\InvItem1C;
 use App\Repository\Storage_1C\MolRepository;
@@ -52,7 +53,10 @@ class ImporterInventoryItemsFrom1C
                     throw new \Exception('Entity manager close');
                 }
 
-                $this->import(fgets($resource));
+                $line = fgets($resource);
+                if (false !== $line) {
+                    $this->import($line);
+                }
             }
             fclose($resource);
 
@@ -78,14 +82,42 @@ class ImporterInventoryItemsFrom1C
             // Prepare input data
             $inventoryData = $this->prepareInputData($line);
 
-            // Find InventoryItem1C
-            $inventoryItem1C = $this->em->getRepository(InventoryItem1C::class)->findOneBy(['inventoryNumber' => $inventoryData['inventoryNumber']]);
+            // Find InventoryItems1C by inventory number
+            $inventoryItems1C = $this->em->getRepository(InventoryItem1C::class)->findBy(['inventoryNumber' => $inventoryData['inventoryNumber']]);
 
             // Create or update inventoryItem1C
-            if (is_null($inventoryItem1C)) {
-                $this->createInventoryItem1C($inventoryData);
-            } else {
-                $this->updateInventoryItem1C($inventoryItem1C, $inventoryData);
+            switch (count($inventoryItems1C)) {
+                case 0:
+                    // create inventoryItem1C
+                    $this->createInventoryItem1C($inventoryData);
+                    break;
+                case 1:
+                    $nomenclatureTypeOfFistElement = $inventoryItems1C[0]->getNomenclature()->getType()->getType();
+                    if ($nomenclatureTypeOfFistElement == $inventoryData['typeOfNomenclature']) {
+                        // update inventoryItem1C
+                        $this->updateInventoryItem1C($inventoryItems1C[0], $inventoryData);
+                    } else {
+                        // create inventoryItem1C
+                        $this->createInventoryItem1C($inventoryData);
+                    }
+                    break;
+                case 2:
+                    // update inventoryItem1C
+                    $nomenclatureTypeOfFistElement = $inventoryItems1C[0]->getNomenclature()->getType()->getType();
+                    $nomenclatureTypeOfSecondElement = $inventoryItems1C[1]->getNomenclature()->getType()->getType();
+                    if (
+                        !($nomenclatureTypeOfFistElement == NomenclatureType::TYPE_MBP && $nomenclatureTypeOfSecondElement == NomenclatureType::TYPE_OC)
+                        &&
+                        !($nomenclatureTypeOfFistElement == NomenclatureType::TYPE_OC && $nomenclatureTypeOfSecondElement == NomenclatureType::TYPE_MBP)
+                    ) {
+                        throw new \Exception('DB has two inventoryItem1C with the same inventoryNumber ('.$inventoryItems1C[0]->getInventoryNumber().') and not valid value of nomenclatureType: '. $nomenclatureTypeOfFistElement. ' - '. $nomenclatureTypeOfSecondElement);
+                    }
+
+                    $inventoryItem1C = ($nomenclatureTypeOfFistElement == $inventoryData['typeOfNomenclature']) ? $inventoryItems1C[0] : $inventoryItems1C[1];
+                    $this->updateInventoryItem1C($inventoryItem1C, $inventoryData);
+                    break;
+                default:
+                    throw new \Exception('DB has more than two inventoryItem1C with the same inventoryNumber ('.$inventoryItems1C[0]->getInventoryNumber(). ')');
             }
             $this->em->clear();
 
@@ -102,7 +134,7 @@ class ImporterInventoryItemsFrom1C
     private function updateInventoryItem1C(InventoryItem1C $inventoryItem1C, array $inventoryData)
     {
         // Get View of InventoryItem1C
-        $invItem1CView = $this->em->getRepository(InvItem1C::class)->findOneBy(['invItem_inventoryNumber' => $inventoryData['inventoryNumber']]);
+        $invItem1CView = $this->em->getRepository(InvItem1C::class)->findOneBy(['invItem_id' => $inventoryItem1C->getId()]);
 
         // Update Rooms1C
         if ($inventoryData['roomsCode'] != $invItem1CView->getRooms1CRoomsCode()
@@ -236,7 +268,12 @@ class ImporterInventoryItemsFrom1C
         }
         $item['serialNumber'] = empty($data[1]) ? self::EMPTY : $data[1];
         $item['nomenclature'] = empty($data[2]) ? self::EMPTY : $data[2];
+
         $item['typeOfNomenclature'] = empty($data[4]) ? self::EMPTY : $data[4];
+        if ($item['typeOfNomenclature'] != NomenclatureType::TYPE_OC && $item['typeOfNomenclature'] != NomenclatureType::TYPE_MBP) {
+            throw new \Exception('Not valid value of Nomenclature Type: '. $line);
+        }
+
         $item['dateOfRegistration'] = empty($data[3]) ? self::EMPTY : new \DateTime($data[3], new \DateTimeZone('UTC'));
         $item['mol'] = empty($data[5]) ? self::EMPTY : $data[5];
         $item['molTabNumber'] = empty($data[8]) ? self::EMPTY : $data[8];
