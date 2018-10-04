@@ -20,4 +20,13 @@ class InvItem1CRepository extends ServiceEntityRepository
         $query = $this->getEntityManager()->createQuery($sql);
         return $query->getArrayResult();
     }
+
+    public function findAllByInventoryNumberAndNomenclatureType($inventoryNumber, $nomenclatureType)
+    {
+        $sql = 'SELECT i FROM App\Entity\View\InvItem1C i WHERE i.invItem_inventoryNumber = :inventoryNumber AND i.nomenclatureType_type = :nomenclatureType';
+        $query = $this->getEntityManager()->createQuery($sql);
+        $query->setParameter('inventoryNumber', $inventoryNumber);
+        $query->setParameter('nomenclatureType', $nomenclatureType);
+        return $query->getArrayResult();
+    }
 }

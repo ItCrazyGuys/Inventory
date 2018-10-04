@@ -11,8 +11,6 @@ class InventoryItemCategory1CRepository extends ServiceEntityRepository
     private const EMPTY = '';
     private const APPLIANCE = 'appliance';
     private const MODULE = 'module';
-    private const AUTOMATICALLY_UNDEFINE = 'automaticallyUndefined';
-    private const NOT_INTERESTED = 'notInterested';
 
 
     public function __construct(RegistryInterface $registry)
@@ -23,6 +21,7 @@ class InventoryItemCategory1CRepository extends ServiceEntityRepository
 
     /**
      * @return InventoryItemCategory
+     * @throws \Doctrine\ORM\ORMException
      */
     public function getEmptyInstance(): InventoryItemCategory
     {
@@ -37,6 +36,7 @@ class InventoryItemCategory1CRepository extends ServiceEntityRepository
 
     /**
      * @return InventoryItemCategory
+     * @throws \Doctrine\ORM\ORMException
      */
     public function getApplianceCategory(): InventoryItemCategory
     {
@@ -51,6 +51,7 @@ class InventoryItemCategory1CRepository extends ServiceEntityRepository
 
     /**
      * @return InventoryItemCategory
+     * @throws \Doctrine\ORM\ORMException
      */
     public function getModuleCategory(): InventoryItemCategory
     {
@@ -58,34 +59,6 @@ class InventoryItemCategory1CRepository extends ServiceEntityRepository
         if (is_null($category)) {
             $category = new InventoryItemCategory();
             $category->setTitle(self::MODULE);
-            self::getEntityManager()->persist($category);
-        }
-        return $category;
-    }
-
-    /**
-     * @return InventoryItemCategory
-     */
-    public function getAutomaticallyUndefineCategory(): InventoryItemCategory
-    {
-        $category = self::findOneBy(['title' => self::AUTOMATICALLY_UNDEFINE]);
-        if (is_null($category)) {
-            $category = new InventoryItemCategory();
-            $category->setTitle(self::AUTOMATICALLY_UNDEFINE);
-            self::getEntityManager()->persist($category);
-        }
-        return $category;
-    }
-
-    /**
-     * @return InventoryItemCategory
-     */
-    public function getNotInterestedCategory(): InventoryItemCategory
-    {
-        $category = self::findOneBy(['title' => self::NOT_INTERESTED]);
-        if (is_null($category)) {
-            $category = new InventoryItemCategory();
-            $category->setTitle(self::NOT_INTERESTED);
             self::getEntityManager()->persist($category);
         }
         return $category;

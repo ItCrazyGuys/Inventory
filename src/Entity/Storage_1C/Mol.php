@@ -3,6 +3,7 @@
 namespace App\Entity\Storage_1C;
 
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\ORM\Event\PreFlushEventArgs;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -11,6 +12,8 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @ORM\Entity(repositoryClass="App\Repository\Storage_1C\MolRepository")
  * @ORM\Table(name="mols", schema="storage_1c")
  * @UniqueEntity("molTabNumber")
+ *
+ * @ORM\HasLifecycleCallbacks()
  */
 class Mol
 {
@@ -54,6 +57,27 @@ class Mol
     {
         $this->inventoryItems1C = new ArrayCollection();
         $this->rooms1C = new ArrayCollection();
+    }
+
+    /**
+     * @ORM\PreFlush()
+     *
+     * @param PreFlushEventArgs $event
+     * @throws \Exception
+     */
+    public function validate(PreFlushEventArgs $event)
+    {
+        // MolTabNumber check
+        if (is_null($this->molTabNumber)) {
+            throw new \Exception('This value of MolTabNumber should not be null.');
+        }
+        $foundMols = $event->getEntityManager()->getRepository(self::class)->findBy(['molTabNumber' => $this->molTabNumber]);
+        if (count($foundMols) > 1) {
+            throw new \Exception('This value ('.$this->molTabNumber.') of molTabNumber has duplicate in Mol.');
+        }
+        if (count($foundMols) == 1 && $foundMols[0]->getId() != $this->getId()) {
+            throw new \Exception('This value ('.$this->molTabNumber.') of molTabNumber is already used in Mol.');
+        }
     }
 
     /**

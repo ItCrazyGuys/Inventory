@@ -2,7 +2,6 @@
 
 namespace App\Repository\Storage_1C;
 
-use App\Entity\Company\Office;
 use App\Entity\Storage_1C\Rooms1C;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Symfony\Bridge\Doctrine\RegistryInterface;
@@ -19,6 +18,7 @@ class Rooms1CRepository extends ServiceEntityRepository
 
     /**
      * @return Rooms1C
+     * @throws \Doctrine\ORM\ORMException
      */
     public function getEmptyInstance(): Rooms1C
     {
@@ -38,6 +38,7 @@ class Rooms1CRepository extends ServiceEntityRepository
      * @param string $title
      * @param string $address
      * @return Rooms1C
+     * @throws \Doctrine\ORM\ORMException
      */
     public function getInstance(string $roomsCode, string $title, string $address): Rooms1C
     {

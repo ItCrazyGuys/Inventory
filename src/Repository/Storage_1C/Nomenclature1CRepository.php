@@ -6,19 +6,23 @@ use App\Entity\Storage_1C\Nomenclature1C;
 use App\Entity\Storage_1C\NomenclatureType;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Symfony\Bridge\Doctrine\RegistryInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class Nomenclature1CRepository extends ServiceEntityRepository
 {
     private const EMPTY = '';
+    private $validator;
 
 
-    public function __construct(RegistryInterface $registry)
+    public function __construct(RegistryInterface $registry, ValidatorInterface $validator)
     {
+        $this->validator = $validator;
         parent::__construct($registry, Nomenclature1C::class);
     }
 
     /**
      * @return Nomenclature1C
+     * @throws \Doctrine\ORM\ORMException
      */
     public function getEmptyInstance(): Nomenclature1C
     {
@@ -36,6 +40,7 @@ class Nomenclature1CRepository extends ServiceEntityRepository
      * @param string $title
      * @param NomenclatureType $type
      * @return Nomenclature1C
+     * @throws \Exception
      */
     public function getByTitleAndType(string $title, NomenclatureType $type): Nomenclature1C
     {
@@ -47,5 +52,19 @@ class Nomenclature1CRepository extends ServiceEntityRepository
             self::getEntityManager()->persist($nomenclature1C);
         }
         return $nomenclature1C;
+    }
+
+    /**
+     * @param $title
+     * @param $nomenclatureType
+     * @return mixed
+     */
+    public function findByTitleAndNomenclatureType($title, $nomenclatureType)
+    {
+        $sql = 'SELECT n FROM App\Entity\Storage_1C\Nomenclature1C n JOIN n.type nt WHERE n.title = :title AND nt.type = :nomenclatureType';
+        $query = $this->getEntityManager()->createQuery($sql);
+        $query->setParameter('title', $title);
+        $query->setParameter('nomenclatureType', $nomenclatureType);
+        return $query->getResult();
     }
 }

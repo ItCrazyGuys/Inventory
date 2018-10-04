@@ -10,7 +10,6 @@ class NomenclatureTypeRepository extends ServiceEntityRepository
 {
     private const EMPTY = '';
 
-
     public function __construct(RegistryInterface $registry)
     {
         parent::__construct($registry, NomenclatureType::class);
@@ -18,6 +17,7 @@ class NomenclatureTypeRepository extends ServiceEntityRepository
 
     /**
      * @return NomenclatureType
+     * @throws \Doctrine\ORM\ORMException|\Exception
      */
     public function getEmptyType(): NomenclatureType
     {
@@ -33,6 +33,7 @@ class NomenclatureTypeRepository extends ServiceEntityRepository
     /**
      * @param string $type
      * @return NomenclatureType
+     * @throws \Doctrine\ORM\ORMException|\Exception
      */
     public function getByType(string $type): NomenclatureType
     {

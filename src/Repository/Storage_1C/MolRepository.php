@@ -19,6 +19,7 @@ class MolRepository extends ServiceEntityRepository
 
     /**
      * @return Mol
+     * @throws \Doctrine\ORM\ORMException
      */
     public function getEmptyInstance(): Mol
     {
@@ -36,6 +37,7 @@ class MolRepository extends ServiceEntityRepository
      * @param $tabNumber
      * @param string $fio
      * @return Mol
+     * @throws \Exception
      */
     public function getByTabNumberAndFio($tabNumber, string $fio): Mol
     {

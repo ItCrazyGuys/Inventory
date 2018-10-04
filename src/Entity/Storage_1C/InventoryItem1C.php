@@ -2,6 +2,7 @@
 
 namespace App\Entity\Storage_1C;
 
+use Doctrine\ORM\Event\PreFlushEventArgs;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -9,10 +10,14 @@ use Symfony\Component\Validator\Constraints as Assert;
 /**
  * @ORM\Entity(repositoryClass="App\Repository\Storage_1C\InventoryItem1CRepository")
  * @ORM\Table(name="`inventoryItem1C`", schema="storage_1c")
- * @UniqueEntity("`inventoryNumber`")
+ * @UniqueEntity("serialNumber")
+ *
+ * @ORM\HasLifecycleCallbacks()
  */
 class InventoryItem1C
 {
+    const EMPTY = '';
+
     /**
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="AUTO")
@@ -42,6 +47,7 @@ class InventoryItem1C
     /**
      * @ORM\Column(name="`lastUpdate`", type="datetime")
      * @Assert\DateTime()
+     * @Assert\NotNull()
      */
     private $lastUpdate;
 
@@ -73,6 +79,67 @@ class InventoryItem1C
 
 
 
+
+    /**
+     * @ORM\PreFlush()
+     *
+     * @param PreFlushEventArgs $event
+     * @throws \Exception
+     */
+    public function validate(PreFlushEventArgs $event)
+    {
+        if (is_null($this->inventoryNumber)) {
+            throw new \Exception('This value of InventoryNumber should not be null.');
+        }
+
+        if (!is_null($this->dateOfRegistration) && !($this->dateOfRegistration instanceof \DateTime)) {
+            throw new \Exception('Invalid type of DateOfRegistration');
+        }
+
+        if (is_null($this->lastUpdate)) {
+            throw new \Exception('This value of LastUpdate should not be null.');
+        }
+
+        if (!($this->lastUpdate instanceof \DateTime)) {
+            throw new \Exception('Invalid type of LastUpdate');
+        }
+
+        if (!($this->category instanceof InventoryItemCategory)) {
+            throw new \Exception('Invalid type of InventoryItemCategory');
+        }
+
+        if (!($this->nomenclature instanceof Nomenclature1C)) {
+            throw new \Exception('Invalid type of Nomenclature1C');
+        }
+
+        if (!($this->mol instanceof Mol)) {
+            throw new \Exception('Invalid type of Mol');
+        }
+
+        if (!($this->rooms1C instanceof Rooms1C)) {
+            throw new \Exception('Invalid type of Rooms1C');
+        }
+
+        // Serial number check
+        if (!empty($this->serialNumber)) {
+            $foundInventoryItems1C = $event->getEntityManager()->getRepository(self::class)->findBy(['serialNumber' => $this->serialNumber]);
+            if (count($foundInventoryItems1C) > 1) {
+                throw new \Exception('This value ('.$this->serialNumber.') of SerialNumber has duplicate in InventoryItem1C.');
+            }
+            if (count($foundInventoryItems1C) == 1 && $foundInventoryItems1C[0]->getId() != $this->getId()) {
+                throw new \Exception('This value ('.$this->serialNumber.') of SerialNumber is already used in InventoryItem1C.');
+            }
+        }
+
+        // Inventory number check
+        $foundInventoryItems1C = $event->getEntityManager()->getRepository(self::class)->findByInventoryNumberAndNomenclatureType($this->inventoryNumber, $this->nomenclature->getType()->getType());
+        if (count($foundInventoryItems1C) > 1) {
+            throw new \Exception('This value ('.$this->inventoryNumber.') of InventoryNumber has duplicate in NomenclatureType '.$this->nomenclature->getType()->getType());
+        }
+        if (count($foundInventoryItems1C) == 1 && $foundInventoryItems1C[0]->getId() != $this->getId()) {
+            throw new \Exception('This value ('.$this->serialNumber.') of InventoryNumber is already used in NomenclatureType '.$this->nomenclature->getType()->getType());
+        }
+    }
 
     /**
      * @return mixed
