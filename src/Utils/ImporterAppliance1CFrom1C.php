@@ -4,14 +4,11 @@ namespace App\Utils;
 
 use App\Entity\Equipment\Appliance;
 use App\Entity\Storage_1C\Appliance1C;
-use App\Repository\Storage_1C\MolRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 
 class ImporterAppliance1CFrom1C
 {
-    private const EMPTY = '';
-
     private $em;
     private $logger;
 
@@ -26,77 +23,39 @@ class ImporterAppliance1CFrom1C
         $this->logger = $logger;
     }
 
-
+    /**
+     * Import Appliance1C from 1C-db
+     */
     public function import()
     {
-        // Get View of InventoryItems1C
+        // Get Data of InventoryItems1C from View
         $viewInventoryItems1C = $this->em->getRepository('View:InvItem1C')->getAllIdAndSerialNumberAndMolTabNumber();
         foreach ($viewInventoryItems1C as $viewInventoryItem1C) {
             try {
-
-                if (self::EMPTY != $viewInventoryItem1C['serialNumber']) {
-
-                    // Find VoiceAppliance
-                    $voiceAppliance = $this->em->getRepository('Equipment:Appliance')->findOneBySerialNumber($viewInventoryItem1C['serialNumber']);
-
-                    // Find VoiceAppliance by Erroneous SerialNumber
-                    if (is_null($voiceAppliance)) {
-                        // ошибочный серийник (перед серийником стоит символ S или &), получаемый со сканера шрих-кодов.
-                        $erroneousSerialNumber = mb_ereg_match('^(S|&)', mb_strtoupper($viewInventoryItem1C['serialNumber'])) ? mb_ereg_replace('^(S|&)', '', mb_strtoupper($viewInventoryItem1C['serialNumber'])) : null;
-
-                        if (!is_null($erroneousSerialNumber)) {
-                            $voiceAppliance = $this->em->getRepository('Equipment:Appliance')->findOneBySerialNumber($erroneousSerialNumber);
+                if (!empty($viewInventoryItem1C['serialNumber'])) {
+                    // Для всех InventoryItem1C имеющих серийный номер создать или обновить связь с Appliance
+                    // Appliance1C check
+                    $appliance1C = $this->em->getRepository('Storage_1C:Appliance1C')->findOneBy(['inventoryData' => $viewInventoryItem1C['id']]);
+                    if (is_null($appliance1C)) {
+                        $this->createAppliance1C($viewInventoryItem1C);
+                    } else {
+                        // Appliance check
+                        $appliance = $this->findApplianceBySerialNumber($viewInventoryItem1C['serialNumber']);
+                        if (!is_null($appliance)) {
+                            $this->updateAppliance1C($appliance1C, $appliance);
+                        } else {
+                            // если Appliance не найден а связь есть, то удалить связь
+                            $this->deleteAppliance1C($appliance1C);
                         }
                     }
-
-                    // Create or Update Appliance1C
-                    if (!is_null($voiceAppliance)) {
-
-                        // Find Appliance1C by InventoryItem1C
-                        $appliance1cByInventoryItem1C = $this->em->getRepository('Storage_1C:Appliance1C')->findOneBy(['inventoryData' => $viewInventoryItem1C['id']]);
-
-                        // Find Appliance1C by VoiceAppliance
-                        $appliance1cByVoiceAppliance = $voiceAppliance->getAppliance1C();
-
-                        // Create Appliance1C
-                        if (is_null($appliance1cByInventoryItem1C) && is_null($appliance1cByVoiceAppliance)) {
-                            $this->createAppliance1C($viewInventoryItem1C['id'], $voiceAppliance);
-                            $this->em->flush();
-                        }
-
-                        // Create Appliance1C
-                        if (is_null($appliance1cByInventoryItem1C) && !is_null($appliance1cByVoiceAppliance) && MolRepository::EMPTY_TAB_NUMBER !== $viewInventoryItem1C['molTabNumber']) {
-                            $this->em->remove($appliance1cByVoiceAppliance);
-                            $this->em->flush();
-                            $this->em->refresh($voiceAppliance);
-                            $this->createAppliance1C($viewInventoryItem1C['id'], $voiceAppliance);
-                            $this->em->flush();
-                        }
-
-                        // Update Appliance1C
-                        if (!is_null($appliance1cByInventoryItem1C) && is_null($appliance1cByVoiceAppliance)) {
-                            $appliance1C = $appliance1cByInventoryItem1C;
-                            $appliance1C->setVoiceAppliance($voiceAppliance);
-                            $this->em->flush();
-                        }
-
-                        // Update Appliance1C
-                        if (!is_null($appliance1cByInventoryItem1C) && !is_null($appliance1cByVoiceAppliance) && $appliance1cByInventoryItem1C->getId() != $appliance1cByVoiceAppliance->getId()) {
-                            if (MolRepository::EMPTY_TAB_NUMBER !== $viewInventoryItem1C['molTabNumber']) {
-                                $this->em->remove($appliance1cByVoiceAppliance);
-                                $this->em->flush();
-                                $this->em->refresh($voiceAppliance);
-                                $appliance1C = $appliance1cByInventoryItem1C;
-                                $appliance1C->setVoiceAppliance($voiceAppliance);
-                            } else {
-                                $this->em->remove($appliance1cByInventoryItem1C);
-                            }
-                            $this->em->flush();
-                        }
-
-                        $this->em->clear();
+                } else {
+                    // Если серийника у InventoryItem1C нет, проверить по InventoryData есть ли соответствующий Appliance1C и удалить его
+                    $appliance1C = $this->em->getRepository('Storage_1C:Appliance1C')->findOneBy(['inventoryData' => $viewInventoryItem1C['id']]);
+                    if (!is_null($appliance1C)) {
+                        $this->deleteAppliance1C($appliance1C);
                     }
                 }
+                $this->em->clear();
             } catch (\Throwable $e) {
                 $this->em->clear();
                 $this->logger->error($e->getMessage());
@@ -105,18 +64,91 @@ class ImporterAppliance1CFrom1C
     }
 
     /**
-     * @param string $inventoryItem1cID
-     * @param Appliance $voiceAppliance
+     * @param Appliance1C $appliance1C
+     * @throws \Doctrine\ORM\ORMException
      */
-    private function createAppliance1C(string $inventoryItem1cID, Appliance $voiceAppliance)
+    private function deleteAppliance1C(Appliance1C $appliance1C)
     {
-        // Get InventoryItem1C
-        $inventoryItem1C = $this->em->getRepository('Storage_1C:InventoryItem1C')->find($inventoryItem1cID);
+        // InventoryItem1C set Empty Category
+        $inventoryItem1C = $appliance1C->getInventoryData();
+        $inventoryItem1C->setCategory($this->em->getRepository('Storage_1C:InventoryItemCategory')->getEmptyInstance());
 
-        // Create Appliance1C
-        $appliance1C = new Appliance1C();
-        $appliance1C->setInventoryData($inventoryItem1C);
-        $appliance1C->setVoiceAppliance($voiceAppliance);
-        $this->em->persist($appliance1C);
+        // Delete Module1C
+        $this->em->remove($appliance1C);
+        $this->em->flush();
+    }
+
+    /**
+     * @param Appliance1C $appliance1C
+     * @param Appliance $appliance
+     * @throws \Doctrine\ORM\ORMException
+     */
+    private function updateAppliance1C(Appliance1C $appliance1C, Appliance $appliance)
+    {
+        $hasUpdate = false;
+
+        // Appliance check
+        if ($appliance1C->getVoiceAppliance()->getId() != $appliance->getId()) {
+            $appliance1C->setVoiceAppliance($appliance);
+            $hasUpdate = true;
+        }
+
+        // Category check
+        $applianceCategory = $this->em->getRepository('Storage_1C:InventoryItemCategory')->getApplianceCategory();
+        $inventoryItem1C = $appliance1C->getInventoryData();
+        if ($inventoryItem1C->getCategory()->getId() != $applianceCategory->getId()) {
+            $inventoryItem1C->setCategory($applianceCategory);
+            $hasUpdate = true;
+        }
+
+        if ($hasUpdate) {
+            $this->em->flush();
+        }
+    }
+
+    /**
+     * @param $inventoryItem1CData
+     * @throws \Doctrine\ORM\NonUniqueResultException
+     * @throws \Doctrine\ORM\ORMException
+     */
+    private function createAppliance1C($inventoryItem1CData)
+    {
+        // Find Appliance by Serial Number
+        $appliance = $this->findApplianceBySerialNumber($inventoryItem1CData['serialNumber']);
+
+        // Если соответствующий Appliance нашелся, создать Appliance1C
+        if (!is_null($appliance)) {
+            // Get InventoryItem1C by Id and set ApplianceCategory
+            $inventoryItem1C = $this->em->getRepository('Storage_1C:InventoryItem1C')->find($inventoryItem1CData['id']);
+            $inventoryItem1C->setCategory($this->em->getRepository('Storage_1C:InventoryItemCategory')->getApplianceCategory());
+
+            // Create Appliance1C
+            $appliance1C = new Appliance1C();
+            $appliance1C->setVoiceAppliance($appliance);
+            $appliance1C->setInventoryData($inventoryItem1C);
+            $this->em->persist($appliance1C);
+            $this->em->flush();
+        }
+    }
+
+    /**
+     * @param $serialNumber
+     * @return Appliance|null
+     * @throws \Doctrine\ORM\NonUniqueResultException
+     */
+    private function findApplianceBySerialNumber($serialNumber)
+    {
+        // Find Appliance by Serial Number
+        $appliance = $this->em->getRepository('Equipment:Appliance')->findOneBySerialNumber($serialNumber);
+        if (is_null($appliance)) {
+            // проверить на наличие ошибочного серийника - (перед серийником стоит символ S или &), получаемый со сканера шрих-кодов.
+            $erroneousSerialNumber = mb_ereg_match('^(S|&)', mb_strtoupper($serialNumber)) ? mb_ereg_replace('^(S|&)', '', mb_strtoupper($serialNumber)) : null;
+            if (!is_null($erroneousSerialNumber)) {
+
+                // Find Appliance by Erroneous SerialNumber
+                $appliance = $this->em->getRepository('Equipment:Appliance')->findOneBySerialNumber($erroneousSerialNumber);
+            }
+        }
+        return $appliance;
     }
 }

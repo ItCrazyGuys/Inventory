@@ -24,8 +24,9 @@ class ModuleItemRepository extends ServiceEntityRepository
     }
 
     /**
-     * @param string $serialNumber
-     * @return ModuleItem|null
+     * @param $serialNumber
+     * @return mixed
+     * @throws \Doctrine\ORM\NonUniqueResultException
      */
     public function findOneBySerialNumber($serialNumber)
     {

@@ -3,6 +3,7 @@
 namespace App\Entity\Storage_1C;
 
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\ORM\Event\PreFlushEventArgs;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -11,14 +12,11 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @ORM\Entity(repositoryClass="App\Repository\Storage_1C\NomenclatureTypeRepository")
  * @ORM\Table(name="`nomenclatureTypes`", schema="storage_1c")
  * @UniqueEntity("type")
+ *
+ * @ORM\HasLifecycleCallbacks()
  */
 class NomenclatureType
 {
-    const TYPE_MBP = 'МБП';
-    const TYPE_OC = 'ОС';
-
-
-
     /**
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="AUTO")
@@ -47,6 +45,27 @@ class NomenclatureType
     }
 
     /**
+     * @ORM\PreFlush()
+     *
+     * @param PreFlushEventArgs $event
+     * @throws \Exception
+     */
+    public function validate(PreFlushEventArgs $event)
+    {
+        // Type check
+        if (is_null($this->type)) {
+            throw new \Exception('This value should not be null.');
+        }
+        $foundNomenclatureTypes = $event->getEntityManager()->getRepository(self::class)->findBy(['type' => $this->type]);
+        if (count($foundNomenclatureTypes) > 1) {
+            throw new \Exception('This value ('.$this->type.') of Type has duplicate in NomenclatureType.');
+        }
+        if (count($foundNomenclatureTypes) == 1 && $foundNomenclatureTypes[0]->getId() != $this->getId()) {
+            throw new \Exception('This value ('.$this->type.') of Type is already used in NomenclatureType.');
+        }
+    }
+
+    /**
      * @return mixed
      */
     public function getId()
@@ -63,9 +82,10 @@ class NomenclatureType
     }
 
     /**
-     * @param mixed $type
+     * @param string $type
+     * @throws \Exception
      */
-    public function setType($type)
+    public function setType(string $type)
     {
         $this->type = $type;
     }

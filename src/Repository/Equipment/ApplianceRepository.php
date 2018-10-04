@@ -24,8 +24,9 @@ class ApplianceRepository extends ServiceEntityRepository
     }
 
     /**
-     * @param string $serialNumber
-     * @return Appliance|null
+     * @param $serialNumber
+     * @return mixed
+     * @throws \Doctrine\ORM\NonUniqueResultException
      */
     public function findOneBySerialNumber($serialNumber)
     {

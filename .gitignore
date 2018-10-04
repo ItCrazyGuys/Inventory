@@ -1,6 +1,7 @@
 
 ###> symfony/framework-bundle ###
 .env
+*.iml
 /.idea/
 /tmp/
 /var/

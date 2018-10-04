@@ -4,6 +4,7 @@ namespace App\Entity\Storage_1C;
 
 use App\Entity\Company\Office;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\ORM\Event\PreFlushEventArgs;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -12,6 +13,8 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @ORM\Entity(repositoryClass="App\Repository\Storage_1C\Rooms1CRepository")
  * @ORM\Table(name="`rooms1C`", schema="storage_1c")
  * @UniqueEntity("roomsCode")
+ *
+ * @ORM\HasLifecycleCallbacks()
  */
 class Rooms1C
 {
@@ -45,7 +48,6 @@ class Rooms1C
     private $inventoryItems1C;
 
     /**
-     *
      * @ORM\ManyToOne(targetEntity="App\Entity\Company\Office", fetch="EXTRA_LAZY")
      * @ORM\JoinColumn(name="__voice_office_id", referencedColumnName="__id", nullable=true)
      */
@@ -63,6 +65,32 @@ class Rooms1C
     {
         $this->inventoryItems1C = new ArrayCollection();
         $this->mols = new ArrayCollection();
+    }
+
+    /**
+     * @ORM\PreFlush()
+     *
+     * @param PreFlushEventArgs $event
+     * @throws \Exception
+     */
+    public function validate(PreFlushEventArgs $event)
+    {
+        // VoiceOffice check
+        if (!is_null($this->voiceOffice) && !($this->voiceOffice instanceof Office)) {
+            throw new \Exception('Invalid type of VoiceOffice');
+        }
+
+        // RoomsCode check
+        if (is_null($this->roomsCode)) {
+            throw new \Exception('This value of RoomsCode should not be null.');
+        }
+        $foundRooms1C = $event->getEntityManager()->getRepository(self::class)->findBy(['roomsCode' => $this->roomsCode]);
+        if (count($foundRooms1C) > 1) {
+            throw new \Exception('This value ('.$this->roomsCode.') of roomsCode has duplicate in Rooms1C.');
+        }
+        if (count($foundRooms1C) == 1 && $foundRooms1C[0]->getId() != $this->getId()) {
+            throw new \Exception('This value ('.$this->roomsCode.') of roomsCode is already used in Rooms1C.');
+        }
     }
 
     /**
