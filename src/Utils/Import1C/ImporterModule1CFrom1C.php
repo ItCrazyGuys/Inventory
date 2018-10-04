@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Utils;
+namespace App\Utils\Import1C;
 
 use App\Entity\Equipment\ModuleItem;
 use App\Entity\Storage_1C\Module1C;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 
-class ImportModule1CFrom1C
+class ImporterModule1CFrom1C
 {
     private $em;
     private $logger;

@@ -2,9 +2,9 @@
 
 namespace App\Command;
 
-use App\Utils\ImporterAppliance1CFrom1C;
-use App\Utils\ImporterInventoryItemsFrom1C;
-use App\Utils\ImportModule1CFrom1C;
+use App\Utils\Import1C\ImporterAppliance1CFrom1C;
+use App\Utils\Import1C\ImporterInventoryItemsFrom1C;
+use App\Utils\Import1C\ImporterModule1CFrom1C;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputInterface;
@@ -24,7 +24,7 @@ class Db1cImportInventoryCommand extends ContainerAwareCommand
     private $logger;
 
 
-    public function __construct(ImporterInventoryItemsFrom1C $importerInventoryItemsFrom1C, ImporterAppliance1CFrom1C $importerAppliance1CFrom1C, ImportModule1CFrom1C $importerModule1CFrom1C, LoggerInterface $inventoryLogger)
+    public function __construct(ImporterInventoryItemsFrom1C $importerInventoryItemsFrom1C, ImporterAppliance1CFrom1C $importerAppliance1CFrom1C, ImporterModule1CFrom1C $importerModule1CFrom1C, LoggerInterface $inventoryLogger)
     {
         $this->importerInventoryItemsFrom1C = $importerInventoryItemsFrom1C;
         $this->importerAppliance1CFrom1C = $importerAppliance1CFrom1C;
