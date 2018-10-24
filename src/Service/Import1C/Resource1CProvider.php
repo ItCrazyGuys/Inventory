@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Utils\Import1C;
+namespace App\Service\Import1C;
 
 class Resource1CProvider
 {

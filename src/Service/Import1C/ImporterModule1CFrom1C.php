@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Utils\Import1C;
+namespace App\Service\Import1C;
 
 use App\Entity\Equipment\ModuleItem;
 use App\Entity\Storage_1C\Module1C;

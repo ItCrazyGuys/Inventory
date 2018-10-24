@@ -2,9 +2,9 @@
 
 namespace App\Command;
 
-use App\Utils\Import1C\ImporterAppliance1CFrom1C;
-use App\Utils\Import1C\ImporterInventoryItemsFrom1C;
-use App\Utils\Import1C\ImporterModule1CFrom1C;
+use App\Service\Import1C\ImporterAppliance1CFrom1C;
+use App\Service\Import1C\ImporterInventoryItemsFrom1C;
+use App\Service\Import1C\ImporterModule1CFrom1C;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputInterface;
