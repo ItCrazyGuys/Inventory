@@ -6,7 +6,7 @@ namespace App\Service;
  *
  * @package App\Service
  */
-interface ImporterService
+interface Importer
 {
     /**
      * Import data

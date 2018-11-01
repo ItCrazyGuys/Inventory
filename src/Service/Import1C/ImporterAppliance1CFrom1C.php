@@ -4,10 +4,11 @@ namespace App\Service\Import1C;
 
 use App\Entity\Equipment\Appliance;
 use App\Entity\Storage_1C\Appliance1C;
+use App\Service\Importer;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 
-class ImporterAppliance1CFrom1C
+class ImporterAppliance1CFrom1C implements Importer
 {
     private $em;
     private $logger;

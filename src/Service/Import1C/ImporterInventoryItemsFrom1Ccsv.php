@@ -6,10 +6,12 @@ use App\Entity\Storage_1C\InventoryItem1C;
 use App\Entity\Storage_1C\Rooms1C;
 use App\Entity\View\InvItem1C;
 use App\Repository\Storage_1C\MolRepository;
+use App\Service\Import1C\Provider\Resource1CProvider;
+use App\Service\Importer;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 
-class ImporterInventoryItemsFrom1C
+class ImporterInventoryItemsFrom1Ccsv implements Importer
 {
     private const IN_CHARSET = 'WINDOWS-1251';
     private const OUT_CHARSET = 'UTF-8';
@@ -23,7 +25,7 @@ class ImporterInventoryItemsFrom1C
     private $logger;
 
     /**
-     * ImporterInventoryItemsFrom1C constructor.
+     * ImporterInventoryItemsFrom1Ccsv constructor.
      * @param Resource1CProvider $resource1CProvider
      * @param EntityManagerInterface $em
      * @param LoggerInterface $logger
@@ -36,7 +38,7 @@ class ImporterInventoryItemsFrom1C
     }
 
 
-    public function importFromCsv()
+    public function import()
     {
         $importedCsvResource = null;
         $resource = null;
@@ -54,7 +56,7 @@ class ImporterInventoryItemsFrom1C
 
                 $line = fgets($resource);
                 if (false !== $line) {
-                    $this->import($line);
+                    $this->importFromCsv($line);
                 }
             }
             fclose($resource);
@@ -75,7 +77,7 @@ class ImporterInventoryItemsFrom1C
     /**
      * @param string $line
      */
-    private function import(string $line)
+    private function importFromCsv(string $line)
     {
         try {
             // Prepare input data

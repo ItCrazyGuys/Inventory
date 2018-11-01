@@ -3,7 +3,7 @@
 namespace App\Command;
 
 use App\Service\Import1C\ImporterAppliance1CFrom1C;
-use App\Service\Import1C\ImporterInventoryItemsFrom1C;
+use App\Service\Import1C\ImporterInventoryItemsFrom1Ccsv;
 use App\Service\Import1C\ImporterModule1CFrom1C;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
@@ -24,9 +24,9 @@ class Db1cImportInventoryCommand extends ContainerAwareCommand
     private $logger;
 
 
-    public function __construct(ImporterInventoryItemsFrom1C $importerInventoryItemsFrom1C, ImporterAppliance1CFrom1C $importerAppliance1CFrom1C, ImporterModule1CFrom1C $importerModule1CFrom1C, LoggerInterface $inventoryLogger)
+    public function __construct(ImporterInventoryItemsFrom1Ccsv $importerInventoryItemsFrom1Ccsv, ImporterAppliance1CFrom1C $importerAppliance1CFrom1C, ImporterModule1CFrom1C $importerModule1CFrom1C, LoggerInterface $inventoryLogger)
     {
-        $this->importerInventoryItemsFrom1C = $importerInventoryItemsFrom1C;
+        $this->importerInventoryItemsFrom1C = $importerInventoryItemsFrom1Ccsv;
         $this->importerAppliance1CFrom1C = $importerAppliance1CFrom1C;
         $this->importerModule1CFrom1C = $importerModule1CFrom1C;
         $this->logger = $inventoryLogger;
@@ -49,7 +49,7 @@ class Db1cImportInventoryCommand extends ContainerAwareCommand
 
         try {
 
-            $this->importerInventoryItemsFrom1C->importFromCsv();
+            $this->importerInventoryItemsFrom1C->import();
             $this->importerAppliance1CFrom1C->import();
             $this->importerModule1CFrom1C->import();
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Service\Import1C;
+namespace App\Service\Import1C\Provider;
 
 class Resource1CProvider
 {
