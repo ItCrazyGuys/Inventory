@@ -24,6 +24,13 @@ class Db1cImportInventoryCommand extends ContainerAwareCommand
     private $logger;
 
 
+    /**
+     * Db1cImportInventoryCommand constructor.
+     * @param ImporterInventoryItemsFrom1Ccsv $importerInventoryItemsFrom1Ccsv
+     * @param ImporterAppliance1CFrom1C $importerAppliance1CFrom1C
+     * @param ImporterModule1CFrom1C $importerModule1CFrom1C
+     * @param LoggerInterface $inventoryLogger
+     */
     public function __construct(ImporterInventoryItemsFrom1Ccsv $importerInventoryItemsFrom1Ccsv, ImporterAppliance1CFrom1C $importerAppliance1CFrom1C, ImporterModule1CFrom1C $importerModule1CFrom1C, LoggerInterface $inventoryLogger)
     {
         $this->importerInventoryItemsFrom1C = $importerInventoryItemsFrom1Ccsv;
@@ -33,12 +40,19 @@ class Db1cImportInventoryCommand extends ContainerAwareCommand
         parent::__construct();
     }
 
+    /**
+     * Method for configuration the command
+     */
     protected function configure()
     {
         $this->setDescription('Import 1C\'s data of inventorization');
     }
 
-
+    /**
+     * @param InputInterface $input
+     * @param OutputInterface $output
+     * @return int|null|void
+     */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         if (self::ENV_DEV == getenv('APP_ENV')) {
