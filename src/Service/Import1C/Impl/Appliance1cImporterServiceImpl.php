@@ -1,20 +1,20 @@
 <?php
 
-namespace App\Service\Import1C;
+namespace App\Service\Import1C\Impl;
 
 use App\Entity\Equipment\Appliance;
 use App\Entity\Storage_1C\Appliance1C;
-use App\Service\Importer;
+use App\Service\Import1C\Appliance1cImporterService;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 
-class ImporterAppliance1CFrom1C implements Importer
+class Appliance1cImporterServiceImpl implements Appliance1cImporterService
 {
     private $em;
     private $logger;
 
     /**
-     * ImporterAppliance1CFrom1C constructor.
+     * ImporterServiceAppliance1CFrom1C constructor.
      * @param EntityManagerInterface $em
      * @param LoggerInterface $logger
      */

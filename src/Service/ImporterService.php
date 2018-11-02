@@ -1,12 +1,13 @@
 <?php
+
 namespace App\Service;
 
 /**
- * Interface for importing data
+ * Interface for importing data service
  *
  * @package App\Service
  */
-interface Importer
+interface ImporterService
 {
     /**
      * Import data

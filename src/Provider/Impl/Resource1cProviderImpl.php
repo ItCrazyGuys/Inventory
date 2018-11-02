@@ -1,8 +1,10 @@
 <?php
 
-namespace App\Service\Import1C\Provider;
+namespace App\Provider\Impl;
 
-class Resource1CProvider
+use App\Provider\Resource1cProvider;
+
+class Resource1cProviderImpl implements Resource1cProvider
 {
     private const TEMP_DIRECTORY = 'tmp';
     private const TEMP_FILE = 'temp_inventory.csv';
@@ -14,6 +16,14 @@ class Resource1CProvider
     private $importedCsvResource;
 
 
+    /**
+     * Resource1cProviderImpl constructor.
+     * @param $importedCsvResource
+     * @param $remoteServerUrl
+     * @param $ftpLogin
+     * @param $ftpPass
+     * @param $projectDir
+     */
     public function __construct($importedCsvResource, $remoteServerUrl, $ftpLogin, $ftpPass, $projectDir)
     {
         $this->importedCsvResource = $importedCsvResource;
@@ -23,7 +33,10 @@ class Resource1CProvider
         $this->projectDir = $projectDir;
     }
 
-    public function getCsvFromFTP()
+    /**
+     * @return string - local resource name
+     */
+    public function getResource()
     {
         $localResource = $this->projectDir . DIRECTORY_SEPARATOR . self::TEMP_DIRECTORY . DIRECTORY_SEPARATOR . self::TEMP_FILE;
 

@@ -42,7 +42,7 @@ services:
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
 
-    App\Service\Import1C\Provider\Resource1CProvider:
+    App\Provider\Impl\Resource1cProviderImpl:
         arguments:
             $importedCsvResource: '%imported_1c_csv_resource%'
             $remoteServerUrl: '%remote_server.url%'
@@ -50,7 +50,7 @@ services:
             $ftpPass: '%remote_server.pass%'
             $projectDir: '%kernel.project_dir%'
 
-    App\Service\ImportAgentsDn\Provider\ResourceHDSProvider:
+    App\Provider\Impl\AgentsDnFromHdsProviderImpl:
         arguments:
             $hdsHost: '%hds.host%'
             $hdsDatabase: '%hds.database%'

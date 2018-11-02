@@ -2,7 +2,7 @@
 
 namespace App\Command;
 
-use App\Service\ImportAgentsDn\ImporterAgentsDnFromHDS;
+use App\Service\ImportAgentsDnService\AgentsDnImporterService;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -13,16 +13,16 @@ class Db1cImportAgentsDnCommand extends Command
 {
     protected static $defaultName = 'db:1c:import-agents-dn';
 
-    private $importerAgentsDn;
+    private $importerAgentsDnService;
     /**
      * @var LoggerInterface
      */
     private $logger;
 
 
-    public function __construct(ImporterAgentsDnFromHDS $importerAgentsDn, LoggerInterface $logger)
+    public function __construct(AgentsDnImporterService $importerAgentsDnService, LoggerInterface $logger)
     {
-        $this->importerAgentsDn = $importerAgentsDn;
+        $this->importerAgentsDnService = $importerAgentsDnService;
         $this->logger = $logger;
         parent::__construct();
     }
@@ -39,7 +39,7 @@ class Db1cImportAgentsDnCommand extends Command
     {
         $io = new SymfonyStyle($input, $output);
         try {
-            $this->importerAgentsDn->import();
+            $this->importerAgentsDnService->import();
             $io->success('Data import completed successfully');
         } catch (\Throwable $e) {
             $this->logger->error($e->getMessage());

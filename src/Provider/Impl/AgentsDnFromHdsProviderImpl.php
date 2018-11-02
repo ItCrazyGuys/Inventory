@@ -1,13 +1,16 @@
 <?php
-namespace App\Service\ImportAgentsDn\Provider;
+
+namespace App\Provider\Impl;
+
+use App\Provider\AgentsDnProvider;
 
 /**
  * Get agentsDn for yesterday from cucm
  *
- * Class ResourceHDSProvider
- * @package App\Service\ImportAgentsDn\Provider
+ * Class AgentsDnFromHdsProviderImpl
+ * @package App\Provider\Impl
  */
-class ResourceHDSProvider
+class AgentsDnFromHdsProviderImpl implements AgentsDnProvider
 {
     private $host;
     private $database;
@@ -43,11 +46,12 @@ class ResourceHDSProvider
         ];
 
         // for windows
-//        $dbh = new \PDO('odbc:Driver={SQL Server Native Client 10.0};Server='.$this->host.';Database='.$this->database.';Uid='.$this->user.';Pwd='.$this->password);
+        $dbh = new \PDO('odbc:Driver={SQL Server Native Client 10.0};Server='.$this->host.';Database='.$this->database.';Uid='.$this->user.';Pwd='.$this->password);
 
+        // todo - uncomment before commit and push
         // for linux
-        $dsn = 'dblib:host='.$this->host.':1433;dbname='.$this->database;
-        $dbh = new \PDO($dsn, $this->user, $this->password);
+//        $dsn = 'dblib:host='.$this->host.':1433;dbname='.$this->database;
+//        $dbh = new \PDO($dsn, $this->user, $this->password);
 
         // Get agentsDn for yesterday from cucm
         $query = 'SELECT * FROM dbo."'.$table[$cucm].'" AS agent_dn WHERE agent_dn."LogoutDateTime" BETWEEN ? AND ?';

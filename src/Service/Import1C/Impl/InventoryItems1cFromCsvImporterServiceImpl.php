@@ -1,17 +1,17 @@
 <?php
 
-namespace App\Service\Import1C;
+namespace App\Service\Import1C\Impl;
 
 use App\Entity\Storage_1C\InventoryItem1C;
 use App\Entity\Storage_1C\Rooms1C;
 use App\Entity\View\InvItem1C;
 use App\Repository\Storage_1C\MolRepository;
-use App\Service\Import1C\Provider\Resource1CProvider;
-use App\Service\Importer;
+use App\Provider\Resource1cProvider;
+use App\Service\Import1C\InventoryItems1cImporterService;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 
-class ImporterInventoryItemsFrom1Ccsv implements Importer
+class InventoryItems1cFromCsvImporterServiceImpl implements InventoryItems1cImporterService
 {
     private const IN_CHARSET = 'WINDOWS-1251';
     private const OUT_CHARSET = 'UTF-8';
@@ -20,19 +20,19 @@ class ImporterInventoryItemsFrom1Ccsv implements Importer
     private const INPUT_DATA_SIZE = 11;
     private const EQUAL_DATES = '000';
 
-    private $resource1CProvider;
+    private $resource1cProvider;
     private $em;
     private $logger;
 
     /**
-     * ImporterInventoryItemsFrom1Ccsv constructor.
-     * @param Resource1CProvider $resource1CProvider
+     * ImporterServiceInventoryItemsFrom1Ccsv constructor.
+     * @param Resource1cProvider $resource1cProvider
      * @param EntityManagerInterface $em
      * @param LoggerInterface $logger
      */
-    public function __construct(Resource1CProvider $resource1CProvider, EntityManagerInterface $em, LoggerInterface $logger)
+    public function __construct(Resource1cProvider $resource1cProvider, EntityManagerInterface $em, LoggerInterface $logger)
     {
-        $this->resource1CProvider = $resource1CProvider;
+        $this->resource1cProvider = $resource1cProvider;
         $this->em = $em;
         $this->logger = $logger;
     }
@@ -45,7 +45,7 @@ class ImporterInventoryItemsFrom1Ccsv implements Importer
 
         try {
             // Get CSV Resource
-            $importedCsvResource = $this->resource1CProvider->getCsvFromFTP();
+            $importedCsvResource = $this->resource1cProvider->getResource();
 
             // Import CSV Resource
             $resource = fopen($importedCsvResource, 'r');
