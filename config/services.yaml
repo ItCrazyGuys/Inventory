@@ -56,3 +56,10 @@ services:
             $hdsDatabase: '%hds.database%'
             $hdsLogin: '%hds.login%'
             $hdsPass: '%hds.pass%'
+
+    App\Service\ImportAgentsDnService\AgentsDnImporterService: '@app.import.agents_dn'
+
+    app.import.agents_dn:
+        class: App\Service\ImportAgentsDnService\Impl\AgentsDnImporterServiceImpl
+
+
