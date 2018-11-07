@@ -37,13 +37,9 @@ class Db1cImportAgentsDnCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        $this->importerAgentsDnService->import();
+
         $io = new SymfonyStyle($input, $output);
-        try {
-            $this->importerAgentsDnService->import();
-            $io->success('Data import completed successfully');
-        } catch (\Throwable $e) {
-            $this->logger->error($e->getMessage());
-            $io->error('Data importing failed successfully');
-        }
+        $io->success('Data import completed ');
     }
 }

@@ -26,24 +26,16 @@ class AgentsDnImporterServiceImpl implements AgentsDnImporterService
 
     public function import()
     {
-        // Processing cucms
-        $cucms = [
-            ['name' => 'cc-559', 'prefix' => '559']
-        ];
-
-        // For each cucms
-        foreach ($cucms as $cucm) {
-            try {
-                // Get agentsDn for yesterday from cucm
-                $agentsDn = $this->agentsDnProvider->getAgentsDn($cucm['name']);
-                var_dump($agentsDn);
+        try {
+            // Get agentsDn
+            $agentsDn = $this->agentsDnProvider->getAgentsDn();
+            var_dump($agentsDn);
 
 
 
 
-            } catch (\Throwable $e) {
-                $this->logger->error($e->getMessage());
-            }
+        } catch (\Throwable $e) {
+            $this->logger->error($e->getMessage());
         }
 
     }
