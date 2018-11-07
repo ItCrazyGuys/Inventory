@@ -55,6 +55,10 @@
                 <filter token="rser" value="${rser}" />
                 <filter token="rser.login" value="${rser.login}" />
                 <filter token="rser.pass" value="${rser.pass}" />
+                <filter token="hds.server" value="${hds.server}" />
+                <filter token="hds.db" value="${hds.db}" />
+                <filter token="hds.user" value="${hds.user}" />
+                <filter token="hds.password" value="${hds.password}" />
             </filterset>
         </copy>
     </target>

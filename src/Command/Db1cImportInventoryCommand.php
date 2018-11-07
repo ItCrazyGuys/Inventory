@@ -2,9 +2,9 @@
 
 namespace App\Command;
 
-use App\Utils\ImporterAppliance1CFrom1C;
-use App\Utils\ImporterInventoryItemsFrom1C;
-use App\Utils\ImportModule1CFrom1C;
+use App\Service\Import1C\Appliance1cImporterService;
+use App\Service\Import1C\InventoryItems1cImporterService;
+use App\Service\Import1C\Module1cImporterService;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputInterface;
@@ -18,27 +18,41 @@ class Db1cImportInventoryCommand extends ContainerAwareCommand
     private const MEMORY_LIMIT = '512M';
     private const ENV_DEV = 'dev';
 
-    private $importerInventoryItemsFrom1C;
-    private $importerAppliance1CFrom1C;
-    private $importerModule1CFrom1C;
+    private $importerInventoryItems;
+    private $importerAppliance1C;
+    private $importerModule1C;
     private $logger;
 
 
-    public function __construct(ImporterInventoryItemsFrom1C $importerInventoryItemsFrom1C, ImporterAppliance1CFrom1C $importerAppliance1CFrom1C, ImportModule1CFrom1C $importerModule1CFrom1C, LoggerInterface $inventoryLogger)
+    /**
+     * Db1cImportInventoryCommand constructor.
+     * @param InventoryItems1cImporterService $importerInventoryItems
+     * @param Appliance1cImporterService $importerAppliance1C
+     * @param Module1cImporterService $importerModule1C
+     * @param LoggerInterface $inventoryLogger
+     */
+    public function __construct(InventoryItems1cImporterService $importerInventoryItems, Appliance1cImporterService $importerAppliance1C, Module1cImporterService $importerModule1C, LoggerInterface $inventoryLogger)
     {
-        $this->importerInventoryItemsFrom1C = $importerInventoryItemsFrom1C;
-        $this->importerAppliance1CFrom1C = $importerAppliance1CFrom1C;
-        $this->importerModule1CFrom1C = $importerModule1CFrom1C;
+        $this->importerInventoryItems = $importerInventoryItems;
+        $this->importerAppliance1C = $importerAppliance1C;
+        $this->importerModule1C = $importerModule1C;
         $this->logger = $inventoryLogger;
         parent::__construct();
     }
 
+    /**
+     * Method for configuration the command
+     */
     protected function configure()
     {
         $this->setDescription('Import 1C\'s data of inventorization');
     }
 
-
+    /**
+     * @param InputInterface $input
+     * @param OutputInterface $output
+     * @return int|null|void
+     */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         if (self::ENV_DEV == getenv('APP_ENV')) {
@@ -49,9 +63,9 @@ class Db1cImportInventoryCommand extends ContainerAwareCommand
 
         try {
 
-            $this->importerInventoryItemsFrom1C->importFromCsv();
-            $this->importerAppliance1CFrom1C->import();
-            $this->importerModule1CFrom1C->import();
+            $this->importerInventoryItems->import();
+            $this->importerAppliance1C->import();
+            $this->importerModule1C->import();
 
             $io->success('Data import completed successfully');
         } catch (\Throwable $e) {

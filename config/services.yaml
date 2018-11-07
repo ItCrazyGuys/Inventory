@@ -2,11 +2,17 @@
 # https://symfony.com/doc/current/best_practices/configuration.html#application-related-configuration
 parameters:
     locale: 'en'
+
     database.url.phpVDB: '@db.url.phpVDB@'
     imported_1c_csv_resource: '@imp.1c.csv.resource@'
     remote_server.url: '@rser@'
     remote_server.login: '@rser.login@'
     remote_server.pass: '@rser.pass@'
+
+    hds.host: '@hds.server@'
+    hds.database: '@hds.db@'
+    hds.login: '@hds.user@'
+    hds.pass: '@hds.password@'
 
 
 services:
@@ -36,10 +42,24 @@ services:
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
 
-    App\Utils\Resource1CProvider:
-            arguments:
-                $importedCsvResource: '%imported_1c_csv_resource%'
-                $remoteServerUrl: '%remote_server.url%'
-                $ftpLogin: '%remote_server.login%'
-                $ftpPass: '%remote_server.pass%'
-                $projectDir: '%kernel.project_dir%'
+    App\Provider\Impl\Resource1cProviderImpl:
+        arguments:
+            $importedCsvResource: '%imported_1c_csv_resource%'
+            $remoteServerUrl: '%remote_server.url%'
+            $ftpLogin: '%remote_server.login%'
+            $ftpPass: '%remote_server.pass%'
+            $projectDir: '%kernel.project_dir%'
+
+    App\Provider\Impl\AgentsDnFromHdsProviderImpl:
+        arguments:
+            $hdsHost: '%hds.host%'
+            $hdsDatabase: '%hds.database%'
+            $hdsLogin: '%hds.login%'
+            $hdsPass: '%hds.pass%'
+
+    App\Service\ImportAgentsDnService\AgentsDnImporterService: '@app.import.agents_dn'
+
+    app.import.agents_dn:
+        class: App\Service\ImportAgentsDnService\Impl\AgentsDnImporterServiceImpl
+
+

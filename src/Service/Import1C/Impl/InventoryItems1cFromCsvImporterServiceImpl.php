@@ -1,15 +1,17 @@
 <?php
 
-namespace App\Utils;
+namespace App\Service\Import1C\Impl;
 
 use App\Entity\Storage_1C\InventoryItem1C;
 use App\Entity\Storage_1C\Rooms1C;
 use App\Entity\View\InvItem1C;
 use App\Repository\Storage_1C\MolRepository;
+use App\Provider\Resource1cProvider;
+use App\Service\Import1C\InventoryItems1cImporterService;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 
-class ImporterInventoryItemsFrom1C
+class InventoryItems1cFromCsvImporterServiceImpl implements InventoryItems1cImporterService
 {
     private const IN_CHARSET = 'WINDOWS-1251';
     private const OUT_CHARSET = 'UTF-8';
@@ -18,32 +20,32 @@ class ImporterInventoryItemsFrom1C
     private const INPUT_DATA_SIZE = 11;
     private const EQUAL_DATES = '000';
 
-    private $resource1CProvider;
+    private $resource1cProvider;
     private $em;
     private $logger;
 
     /**
-     * ImporterInventoryItemsFrom1C constructor.
-     * @param Resource1CProvider $resource1CProvider
+     * ImporterServiceInventoryItemsFrom1Ccsv constructor.
+     * @param Resource1cProvider $resource1cProvider
      * @param EntityManagerInterface $em
      * @param LoggerInterface $logger
      */
-    public function __construct(Resource1CProvider $resource1CProvider, EntityManagerInterface $em, LoggerInterface $logger)
+    public function __construct(Resource1cProvider $resource1cProvider, EntityManagerInterface $em, LoggerInterface $logger)
     {
-        $this->resource1CProvider = $resource1CProvider;
+        $this->resource1cProvider = $resource1cProvider;
         $this->em = $em;
         $this->logger = $logger;
     }
 
 
-    public function importFromCsv()
+    public function import()
     {
         $importedCsvResource = null;
         $resource = null;
 
         try {
             // Get CSV Resource
-            $importedCsvResource = $this->resource1CProvider->getCsvFromFTP();
+            $importedCsvResource = $this->resource1cProvider->getResource();
 
             // Import CSV Resource
             $resource = fopen($importedCsvResource, 'r');
@@ -54,7 +56,7 @@ class ImporterInventoryItemsFrom1C
 
                 $line = fgets($resource);
                 if (false !== $line) {
-                    $this->import($line);
+                    $this->importFromCsv($line);
                 }
             }
             fclose($resource);
@@ -75,7 +77,7 @@ class ImporterInventoryItemsFrom1C
     /**
      * @param string $line
      */
-    private function import(string $line)
+    private function importFromCsv(string $line)
     {
         try {
             // Prepare input data
