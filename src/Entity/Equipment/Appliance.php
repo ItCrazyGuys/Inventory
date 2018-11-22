@@ -4,7 +4,6 @@ namespace App\Entity\Equipment;
 
 use App\Entity\Company\Office;
 use App\Entity\Storage_1C\Appliance1C;
-use App\Entity\Storage_1C\InventoryItem1C;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints\DateTime;

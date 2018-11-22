@@ -5,7 +5,7 @@ namespace App\Provider\Impl;
 use App\Provider\AgentsDnProvider;
 
 /**
- * Get agentsDn for yesterday from all cucms
+ * Get agentsDn for yesterday from hds for all cucms
  *
  * Class AgentsDnFromHdsProviderImpl
  * @package App\Provider\Impl
@@ -38,7 +38,7 @@ class AgentsDnFromHdsProviderImpl implements AgentsDnProvider
     }
 
     /**
-     * @return array - agentsDn for yesterday from all cucms
+     * @return array - agentsDn for yesterday from hds for all cucms
      */
     public function getAgentsDn()
     {
