@@ -62,6 +62,11 @@ class InvItem1C implements IInventoryItem1C
     private $nomenclature1C_title;
 
     /**
+     * @ORM\Column(name="`nomenclature1C_nomenclatureId`", type="string")
+     */
+    private $nomenclature1C_nomenclatureId;
+
+    /**
      * @ORM\Column(name="`nomenclatureType_id`", type="bigint")
      */
     private $nomenclatureType_id;
@@ -272,5 +277,21 @@ class InvItem1C implements IInventoryItem1C
     public function getRooms1CTitle()
     {
         return $this->rooms1C_title;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getNomenclature1CNomenclatureId()
+    {
+        return $this->nomenclature1C_nomenclatureId;
+    }
+
+    /**
+     * @param mixed $nomenclature1C_nomenclatureId
+     */
+    public function setNomenclature1CNomenclatureId($nomenclature1C_nomenclatureId): void
+    {
+        $this->nomenclature1C_nomenclatureId = $nomenclature1C_nomenclatureId;
     }
 }

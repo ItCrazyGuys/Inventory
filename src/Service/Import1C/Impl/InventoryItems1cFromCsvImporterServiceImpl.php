@@ -17,7 +17,7 @@ class InventoryItems1cFromCsvImporterServiceImpl implements InventoryItems1cImpo
     private const OUT_CHARSET = 'UTF-8';
     private const HEADER = 'ИнвентарнаяЕдиница';
     private const EMPTY = '';
-    private const INPUT_DATA_SIZE = 11;
+    private const INPUT_DATA_SIZE = 12;
     private const EQUAL_DATES = '000';
 
     private $resource1cProvider;
@@ -125,10 +125,10 @@ class InventoryItems1cFromCsvImporterServiceImpl implements InventoryItems1cImpo
         }
 
         // Update Nomenclature1C
-        if ($invItem1CView->getNomenclature1CTitle() != $data['nomenclature'] || $invItem1CView->getNomenclatureTypeType() != $data['typeOfNomenclature'])
+        if ($invItem1CView->getNomenclature1CNomenclatureId() != $data['nomenclatureId'] || $invItem1CView->getNomenclature1CTitle() != $data['nomenclature'] || $invItem1CView->getNomenclatureTypeType() != $data['typeOfNomenclature'])
         {
             $nomenclatureType = $this->em->getRepository('Storage_1C:NomenclatureType')->getByType($data['typeOfNomenclature']);
-            $nomenclature = $this->em->getRepository('Storage_1C:Nomenclature1C')->getByTitleAndType($data['nomenclature'], $nomenclatureType);
+            $nomenclature = $this->em->getRepository('Storage_1C:Nomenclature1C')->getByFields($data['nomenclatureId'], $data['nomenclature'], $nomenclatureType);
             $inventoryItem1C->setNomenclature($nomenclature);
         }
 
@@ -167,7 +167,7 @@ class InventoryItems1cFromCsvImporterServiceImpl implements InventoryItems1cImpo
         $nomenclatureType = $this->em->getRepository('Storage_1C:NomenclatureType')->getByType($inventoryData['typeOfNomenclature']);
 
         // Define Nomenclature1C
-        $nomenclature = $this->em->getRepository('Storage_1C:Nomenclature1C')->getByTitleAndType($inventoryData['nomenclature'], $nomenclatureType);
+        $nomenclature = $this->em->getRepository('Storage_1C:Nomenclature1C')->getByFields($inventoryData['nomenclatureId'], $inventoryData['nomenclature'], $nomenclatureType);
 
         // Define InventoryItemCategory
         $category = $this->em->getRepository('Storage_1C:InventoryItemCategory')->getEmptyInstance();
@@ -219,6 +219,7 @@ class InventoryItems1cFromCsvImporterServiceImpl implements InventoryItems1cImpo
         $item['molTabNumber'] = empty($data[8]) ? self::EMPTY : $data[8];
         $item['roomsCode'] = empty($data[6]) ? self::EMPTY : $data[6];
         $item['roomsAddress'] = empty($data[7]) ? self::EMPTY : $data[7];
+        $item['nomenclatureId'] = empty($data[11]) ? self::EMPTY : $data[11];
 
         $item['roomsTitle'] = self::EMPTY;
         if (self::EMPTY != $item['roomsAddress']) {

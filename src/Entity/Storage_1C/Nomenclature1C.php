@@ -29,6 +29,11 @@ class Nomenclature1C
     private $title;
 
     /**
+     * @ORM\Column(name="`nomenclatureId`", type="text")
+     */
+    private $nomenclatureId;
+
+    /**
      * @ORM\ManyToOne(targetEntity="App\Entity\Storage_1C\NomenclatureType", fetch="EXTRA_LAZY")
      * @ORM\JoinColumn(name="__type_id", referencedColumnName="__id")
      */
@@ -64,12 +69,12 @@ class Nomenclature1C
         if (is_null($this->title)) {
             throw new \Exception('This value of Title should not be null.');
         }
-        $foundNomenclature1C = $event->getEntityManager()->getRepository(self::class)->findByTitleAndNomenclatureType($this->title, $this->type->getType());
+        $foundNomenclature1C = $event->getEntityManager()->getRepository(self::class)->findByNomenclatureIdAndNomenclatureType($this->nomenclatureId, $this->type->getType());
         if (count($foundNomenclature1C) > 1) {
-            throw new \Exception('This value ('.$this->title.') of Title with value ('.$this->type->getType().') of NomenclatureType has duplicate in Nomenclature1C.');
+            throw new \Exception('This value ('.$this->nomenclatureId.') of NomenclatureId with value ('.$this->type->getType().') of NomenclatureType has duplicate in Nomenclature1C.');
         }
         if (count($foundNomenclature1C) == 1 && $foundNomenclature1C[0]->getId() != $this->getId()) {
-            throw new \Exception('This value ('.$this->title.') of Title with value ('.$this->type->getType().') of NomenclatureType is already used in Nomenclature1C.');
+            throw new \Exception('This value ('.$this->nomenclatureId.') of NomenclatureId with value ('.$this->type->getType().') of NomenclatureType is already used in Nomenclature1C.');
         }
     }
 
@@ -119,5 +124,21 @@ class Nomenclature1C
     public function getInventoryItems1C()
     {
         return $this->inventoryItems1C;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getNomenclatureId()
+    {
+        return $this->nomenclatureId;
+    }
+
+    /**
+     * @param mixed $nomenclatureId
+     */
+    public function setNomenclatureId($nomenclatureId): void
+    {
+        $this->nomenclatureId = $nomenclatureId;
     }
 }

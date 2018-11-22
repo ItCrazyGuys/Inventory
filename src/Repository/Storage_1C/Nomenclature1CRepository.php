@@ -37,33 +37,37 @@ class Nomenclature1CRepository extends ServiceEntityRepository
     }
 
     /**
+     * @param $nomenclatureId
      * @param string $title
      * @param NomenclatureType $type
      * @return Nomenclature1C
-     * @throws \Exception
+     * @throws \Doctrine\ORM\ORMException
      */
-    public function getByTitleAndType(string $title, NomenclatureType $type): Nomenclature1C
+    public function getByFields($nomenclatureId, string $title, NomenclatureType $type): Nomenclature1C
     {
-        $nomenclature1C = self::findOneBy(['title' => $title, 'type' => $type]);
+        $nomenclature1C = self::findOneBy(['nomenclatureId' => $nomenclatureId, 'type' => $type]);
         if (is_null($nomenclature1C)) {
             $nomenclature1C = new Nomenclature1C();
+            $nomenclature1C->setNomenclatureId($nomenclatureId);
             $nomenclature1C->setTitle($title);
             $nomenclature1C->setType($type);
             self::getEntityManager()->persist($nomenclature1C);
+        } elseif ($title != $nomenclature1C->getTitle()) {
+            $nomenclature1C->setTitle($title);
         }
         return $nomenclature1C;
     }
 
     /**
-     * @param $title
+     * @param $nomenclatureId
      * @param $nomenclatureType
      * @return mixed
      */
-    public function findByTitleAndNomenclatureType($title, $nomenclatureType)
+    public function findByNomenclatureIdAndNomenclatureType($nomenclatureId, $nomenclatureType)
     {
-        $sql = 'SELECT n FROM App\Entity\Storage_1C\Nomenclature1C n JOIN n.type nt WHERE n.title = :title AND nt.type = :nomenclatureType';
+        $sql = 'SELECT n FROM App\Entity\Storage_1C\Nomenclature1C n JOIN n.type nt WHERE n.nomenclatureId = :nomenclatureId AND nt.type = :nomenclatureType';
         $query = $this->getEntityManager()->createQuery($sql);
-        $query->setParameter('title', $title);
+        $query->setParameter('nomenclatureId', $nomenclatureId);
         $query->setParameter('nomenclatureType', $nomenclatureType);
         return $query->getResult();
     }
