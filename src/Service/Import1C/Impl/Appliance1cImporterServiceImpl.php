@@ -33,29 +33,22 @@ class Appliance1cImporterServiceImpl implements Appliance1cImporterService
         $viewInventoryItems1C = $this->em->getRepository('View:InvItem1C')->getAllIdAndSerialNumberAndMolTabNumber();
         foreach ($viewInventoryItems1C as $viewInventoryItem1C) {
             try {
+
+                // Find Appliance1C by InventoryItemId
+                $appliance1C = $this->em->getRepository('Storage_1C:Appliance1C')->findOneBy(['inventoryData' => $viewInventoryItem1C['id']]);
+
+                // Для всех InventoryItem имеющих серийный номер создать или обновить связь с Appliance
                 if (!empty($viewInventoryItem1C['serialNumber'])) {
-                    // Для всех InventoryItem1C имеющих серийный номер создать или обновить связь с Appliance
-                    // Appliance1C check
-                    $appliance1C = $this->em->getRepository('Storage_1C:Appliance1C')->findOneBy(['inventoryData' => $viewInventoryItem1C['id']]);
                     if (is_null($appliance1C)) {
                         $this->createAppliance1C($viewInventoryItem1C);
                     } else {
-                        // Appliance check
-                        $appliance = $this->findApplianceBySerialNumber($viewInventoryItem1C['serialNumber']);
-                        if (!is_null($appliance)) {
-                            $this->updateAppliance1C($appliance1C, $appliance);
-                        } else {
-                            // если Appliance не найден а связь есть, то удалить связь
-                            $this->deleteAppliance1C($appliance1C);
-                        }
+                        $this->updateAppliance1C($appliance1C, $viewInventoryItem1C);
                     }
-                } else {
-                    // Если серийника у InventoryItem1C нет, проверить по InventoryData есть ли соответствующий Appliance1C и удалить его
-                    $appliance1C = $this->em->getRepository('Storage_1C:Appliance1C')->findOneBy(['inventoryData' => $viewInventoryItem1C['id']]);
-                    if (!is_null($appliance1C)) {
-                        $this->deleteAppliance1C($appliance1C);
-                    }
+                } elseif (!is_null($appliance1C)) {
+                    // Если у InventoryItem1C пустой серийник, но есть соответстующий Appliance1C - удалить этот Appliance1C
+                    $this->deleteAppliance1C($appliance1C);
                 }
+
                 $this->em->clear();
             } catch (\Throwable $e) {
                 $this->em->clear();
@@ -81,15 +74,29 @@ class Appliance1cImporterServiceImpl implements Appliance1cImporterService
 
     /**
      * @param Appliance1C $appliance1C
-     * @param Appliance $appliance
+     * @param $viewInventoryItem1C
+     * @throws \Doctrine\ORM\NonUniqueResultException
      * @throws \Doctrine\ORM\ORMException
      */
-    private function updateAppliance1C(Appliance1C $appliance1C, Appliance $appliance)
+    private function updateAppliance1C(Appliance1C $appliance1C, $viewInventoryItem1C)
     {
         $hasUpdate = false;
 
         // Appliance check
+        $appliance = $this->findApplianceBySerialNumber($viewInventoryItem1C['serialNumber']);
         if ($appliance1C->getVoiceAppliance()->getId() != $appliance->getId()) {
+
+            // Check Duplicate Appliance1C by Appliance, if true, then delete Duplicate Appliance1C
+            $duplicateAppliances1C = $this->em->getRepository(Appliance1C::class)->findBy(['voiceAppliance' => $appliance]);
+            if (count($duplicateAppliances1C) > 0) {
+                foreach ($duplicateAppliances1C as $duplicateAppliance1C) {
+                    $this->em->remove($duplicateAppliance1C);
+                    $this->em->flush();
+                }
+            }
+            $this->em->refresh($appliance1C);
+            $this->em->refresh($appliance);
+
             $appliance1C->setVoiceAppliance($appliance);
             $hasUpdate = true;
         }
@@ -119,6 +126,16 @@ class Appliance1cImporterServiceImpl implements Appliance1cImporterService
 
         // Если соответствующий Appliance нашелся, создать Appliance1C
         if (!is_null($appliance)) {
+            // Check Duplicate Appliance1C by Appliance, if true, then delete Duplicate Appliance1C
+            $duplicateAppliance1C = $this->em->getRepository(Appliance1C::class)->findBy(['voiceAppliance' => $appliance]);
+            if (count($duplicateAppliance1C) > 0) {
+                foreach ($duplicateAppliance1C as $appliance1C) {
+                    $this->em->remove($appliance1C);
+                    $this->em->flush();
+                }
+            }
+            $this->em->refresh($appliance);
+
             // Get InventoryItem1C by Id and set ApplianceCategory
             $inventoryItem1C = $this->em->getRepository('Storage_1C:InventoryItem1C')->find($inventoryItem1CData['id']);
             $inventoryItem1C->setCategory($this->em->getRepository('Storage_1C:InventoryItemCategory')->getApplianceCategory());
