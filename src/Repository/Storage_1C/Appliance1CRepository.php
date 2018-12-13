@@ -17,7 +17,8 @@ class Appliance1CRepository extends ServiceEntityRepository
 
     /**
      * @param Appliance $appliance
-     * @return Appliance1C|null
+     * @return mixed
+     * @throws \Doctrine\ORM\NonUniqueResultException
      */
     public function findOneByVoiceAppliance(Appliance $appliance)
     {
