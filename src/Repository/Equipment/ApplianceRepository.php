@@ -34,4 +34,16 @@ class ApplianceRepository extends ServiceEntityRepository
         $query->setParameter('serialNumber', $serialNumber);
         return $query->getOneOrNullResult();
     }
+
+    /**
+     * @param $serialNumber
+     * @return mixed
+     * @throws \Doctrine\ORM\NonUniqueResultException
+     */
+    public function findOneByAlternativeSerialNumber($serialNumber)
+    {
+        $query = $this->getEntityManager()->createQuery('SELECT a FROM App\Entity\Equipment\Appliance a JOIN a.platform p WHERE p.serialNumberAlt = :serialNumber');
+        $query->setParameter('serialNumber', $serialNumber);
+        return $query->getOneOrNullResult();
+    }
 }
