@@ -23,6 +23,11 @@ class PlatformItem
     private $serialNumber;
 
     /**
+     * @ORM\Column(name="`serialNumberAlt`", type="string")
+     */
+    private $serialNumberAlt;
+
+    /**
      * @ORM\Column(name="`inventoryNumber`", type="string")
      */
     private $inventoryNumber;
@@ -78,6 +83,22 @@ class PlatformItem
     public function setSerialNumber(string $serialNumber)
     {
         $this->serialNumber = $serialNumber;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getSerialNumberAlt()
+    {
+        return $this->serialNumberAlt;
+    }
+
+    /**
+     * @param mixed $serialNumberAlt
+     */
+    public function setSerialNumberAlt($serialNumberAlt): void
+    {
+        $this->serialNumberAlt = $serialNumberAlt;
     }
 
     /**

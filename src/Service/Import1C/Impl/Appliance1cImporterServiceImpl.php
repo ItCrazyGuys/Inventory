@@ -158,6 +158,8 @@ class Appliance1cImporterServiceImpl implements Appliance1cImporterService
     {
         // Find Appliance by Serial Number
         $appliance = $this->em->getRepository('Equipment:Appliance')->findOneBySerialNumber($serialNumber);
+
+        // If Appliance not found, then Find Appliance by Erroneous SerialNumber
         if (is_null($appliance)) {
             // проверить на наличие ошибочного серийника - (перед серийником стоит символ S или &), получаемый со сканера шрих-кодов.
             $erroneousSerialNumber = mb_ereg_match('^(S|&)', mb_strtoupper($serialNumber)) ? mb_ereg_replace('^(S|&)', '', mb_strtoupper($serialNumber)) : null;
@@ -166,6 +168,11 @@ class Appliance1cImporterServiceImpl implements Appliance1cImporterService
                 // Find Appliance by Erroneous SerialNumber
                 $appliance = $this->em->getRepository('Equipment:Appliance')->findOneBySerialNumber($erroneousSerialNumber);
             }
+        }
+
+        // If Appliance not found, then Find Appliance by Alternative SerialNumber
+        if (is_null($appliance)) {
+            $appliance = $this->em->getRepository('Equipment:Appliance')->findOneByAlternativeSerialNumber($serialNumber);
         }
         return $appliance;
     }
