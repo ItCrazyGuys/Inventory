@@ -2,27 +2,32 @@
 
 namespace App\Service\ImportAgentsDnService\Impl;
 
-use App\Provider\AgentsDnProvider;
+use App\Provider\Impl\AgentsDnFromHds558ProviderImpl;
+use App\Provider\Impl\AgentsDnFromHds559ProviderImpl;
 use App\Service\ImportAgentsDnService\AgentsDnImporterService;
+use Doctrine\DBAL\DBALException;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 
 class AgentsDnFromHdsImporterServiceImpl implements AgentsDnImporterService
 {
-    private $agentsDnProvider;
     private $logger;
     private $em;
+    private $agents558DnProvider;
+    private $agents559DnProvider;
 
 
     /**
      * AgentsDnFromHdsImporterServiceImpl constructor.
-     * @param AgentsDnProvider $agentsDnProvider
+     * @param AgentsDnFromHds559ProviderImpl $agents559DnProvider
+     * @param AgentsDnFromHds558ProviderImpl $agents558DnProvider
      * @param LoggerInterface $logger
      * @param EntityManagerInterface $em
      */
-    public function __construct(AgentsDnProvider $agentsDnProvider, LoggerInterface $logger, EntityManagerInterface $em)
+    public function __construct(AgentsDnFromHds559ProviderImpl $agents559DnProvider, AgentsDnFromHds558ProviderImpl $agents558DnProvider, LoggerInterface $logger, EntityManagerInterface $em)
     {
-        $this->agentsDnProvider = $agentsDnProvider;
+        $this->agents559DnProvider = $agents559DnProvider;
+        $this->agents558DnProvider = $agents558DnProvider;
         $this->logger = $logger; // todo - сделать в отдельном файле
         $this->em = $em;
     }
@@ -33,44 +38,56 @@ class AgentsDnFromHdsImporterServiceImpl implements AgentsDnImporterService
     public function import()
     {
         try {
-            // Get agentsDn
-            $agentsDn = $this->agentsDnProvider->getAgentsDn();
+            // Get agents559Dn
+            $agents559Dn = $this->agents559DnProvider->getAgentsDn();
 
-            // Import agentsDn statistics
-            $this->importStatisticsByAgentsDn($agentsDn);
+            // Get agents558Dn
+            $agents558Dn = $this->agents558DnProvider->getAgentsDn();
+
+            // Merge agentsDn
+            $agentsDn = array_merge($agents559Dn, $agents558Dn);
+            unset($agents558Dn);
+            unset($agents559Dn);
+
+            // Import agentsDn
+            $this->importAgentsDn($agentsDn);
 
         } catch (\Throwable $e) {
             $this->logger->error($e->getMessage());
         }
     }
 
-    private function importStatisticsByAgentsDn($agentsDn)
+    private function importAgentsDn($agentsDn)
     {
-        // Define Phones(AgentsDn) Statistics by Offices as array: [ 'officeId' => [id_1, id_2, ..., id_N]]
-        $phonesStatsByOffices = [];
+        $table = 'hds.foreign_hds';
+        $dbh = $this->em->getConnection();
+        $dbh->beginTransaction();
+        try {
+            // Delete old data
+            $query = 'TRUNCATE ' . $table;
+            $stmt = $dbh->prepare($query);
+            $stmt->execute();
 
-        // Define AgentsDn Statistics by Offices as array: [ 'officeId' => ['prefix1' => amount of AgentsDn in given office by prefix1', 'prefix2' => amount of AgentsDn in given office by prefix2']]
-        $agentsDnStatsByOffices = [];
+            // Save import data
+            $values = '';
+            $params = [];
+            foreach ($agentsDn as $dn) {
+                if (empty($values)) {
+                    $values .= '(?, ?, now())';
+                } else {
+                    $values .= ', (?, ?, now())';
+                }
+                $params[] = $dn['prefix'];
+                $params[] = $dn['dn'];
+            }
+            $query = 'INSERT INTO hds.foreign_hds VALUES ' . $values;
+            $stmt = $dbh->prepare($query);
+            $stmt->execute($params);
 
-        // Get Phones and AgentsDn Statistics
-        foreach ($agentsDn as $agentDn) {
-            try {
-                $phone = $this->em->getRepository("View:DevPhoneInfoGeo")->getOfficeAndApplianceBy($agentDn['prefix'], $agentDn['extension']);
-            } catch (\Throwable $e) {
-                $this->logger->warning($e->getMessage());
-                continue;
-            }
-            if (is_null($phone)) {
-                continue;
-            }
-            $office = $phone['officeId'];
-            $prefix = $agentDn['prefix'];
-            $agentsDnStatsByOffices[$office][$prefix] = isset($agentsDnStatsByOffices[$office][$prefix]) ? ++$agentsDnStatsByOffices[$office][$prefix] : 1;
-            $phonesStatsByOffices[$office][] = $phone['applianceId'];
+            $dbh->commit();
+        } catch (DBALException $e) {
+            $this->logger->error($e->getMessage());
+            $dbh->rollBack();
         }
-
-        dump($agentsDnStatsByOffices);
-        dump($phonesStatsByOffices);
-
     }
 }
