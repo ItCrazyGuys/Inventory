@@ -21,7 +21,6 @@ parameters:
     hds558.pass: '@hds558.password@'
     hds558.table: 'Saratov_AgentLogOut'
 
-
 services:
     # default configuration for services in *this* file
     _defaults:
