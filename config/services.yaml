@@ -57,18 +57,18 @@ services:
             $ftpPass: '%remote_server.pass%'
             $projectDir: '%kernel.project_dir%'
 
-        App\Provider\Impl\AgentsDnFromHds559ProviderImpl:
-            arguments:
-                $hds559Host: '%hds559.host%'
-                $hds559Database: '%hds559.database%'
-                $hds559Login: '%hds559.login%'
-                $hds559Pass: '%hds559.pass%'
-                $hds559Table: '%hds559.table%'
+    App\Provider\Impl\AgentsDnFromHds559ProviderImpl:
+        arguments:
+            $hds559Host: '%hds559.host%'
+            $hds559Database: '%hds559.database%'
+            $hds559Login: '%hds559.login%'
+            $hds559Pass: '%hds559.pass%'
+            $hds559Table: '%hds559.table%'
 
-        App\Provider\Impl\AgentsDnFromHds558ProviderImpl:
-            arguments:
-                $hds558Host: '%hds558.host%'
-                $hds558Database: '%hds558.database%'
-                $hds558Login: '%hds558.login%'
-                $hds558Pass: '%hds558.pass%'
-                $hds558Table: '%hds558.table%'
+    App\Provider\Impl\AgentsDnFromHds558ProviderImpl:
+        arguments:
+            $hds558Host: '%hds558.host%'
+            $hds558Database: '%hds558.database%'
+            $hds558Login: '%hds558.login%'
+            $hds558Pass: '%hds558.pass%'
+            $hds558Table: '%hds558.table%'
