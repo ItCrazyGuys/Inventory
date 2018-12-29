@@ -9,11 +9,17 @@ parameters:
     remote_server.login: '@rser.login@'
     remote_server.pass: '@rser.pass@'
 
-    hds.host: '@hds.server@'
-    hds.database: '@hds.db@'
-    hds.login: '@hds.user@'
-    hds.pass: '@hds.password@'
+    hds559.host: '@hds559.server@'
+    hds559.database: '@hds559.db@'
+    hds559.login: '@hds559.user@'
+    hds559.pass: '@hds559.password@'
+    hds559.table: 'Saratov_AgentLogOut'
 
+    hds558.host: '@hds558.server@'
+    hds558.database: '@hds558.db@'
+    hds558.login: '@hds558.user@'
+    hds558.pass: '@hds558.password@'
+    hds558.table: 'Saratov_AgentLogOut'
 
 services:
     # default configuration for services in *this* file
@@ -50,16 +56,18 @@ services:
             $ftpPass: '%remote_server.pass%'
             $projectDir: '%kernel.project_dir%'
 
-    App\Provider\Impl\AgentsDnFromHdsProviderImpl:
+    App\Provider\Impl\AgentsDnFromHds559ProviderImpl:
         arguments:
-            $hdsHost: '%hds.host%'
-            $hdsDatabase: '%hds.database%'
-            $hdsLogin: '%hds.login%'
-            $hdsPass: '%hds.pass%'
+            $hds559Host: '%hds559.host%'
+            $hds559Database: '%hds559.database%'
+            $hds559Login: '%hds559.login%'
+            $hds559Pass: '%hds559.pass%'
+            $hds559Table: '%hds559.table%'
 
-    App\Service\ImportAgentsDnService\AgentsDnImporterService: '@app.import.agents_dn'
-
-    app.import.agents_dn:
-        class: App\Service\ImportAgentsDnService\Impl\AgentsDnImporterServiceImpl
-
-
+    App\Provider\Impl\AgentsDnFromHds558ProviderImpl:
+        arguments:
+            $hds558Host: '%hds558.host%'
+            $hds558Database: '%hds558.database%'
+            $hds558Login: '%hds558.login%'
+            $hds558Pass: '%hds558.pass%'
+            $hds558Table: '%hds558.table%'
