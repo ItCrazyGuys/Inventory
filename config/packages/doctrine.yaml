@@ -47,6 +47,12 @@ doctrine:
                         dir: '%kernel.project_dir%/src/Entity/Geolocation'
                         prefix: 'App\Entity\Geolocation'
                         alias: Geolocation
+                    Hds:
+                        is_bundle: false
+                        type: annotation
+                        dir: '%kernel.project_dir%/src/Entity/Hds'
+                        prefix: 'App\Entity\Hds'
+                        alias: Hds
                     Network:
                         is_bundle: false
                         type: annotation

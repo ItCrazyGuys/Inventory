@@ -9,7 +9,7 @@ use Doctrine\DBAL\DBALException;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 
-class AgentsDnFromHdsImporterServiceImpl implements AgentsDnImporterService
+class HdsDailyAgentsDnStatisticsImporterServiceImpl implements AgentsDnImporterService
 {
     private $logger;
     private $em;
@@ -59,7 +59,7 @@ class AgentsDnFromHdsImporterServiceImpl implements AgentsDnImporterService
 
     private function importAgentsDn($agentsDn)
     {
-        $table = 'hds.foreign_hds';
+        $table = 'hds.hds_daily_agents_dn_statistics';
         $dbh = $this->em->getConnection();
         $dbh->beginTransaction();
         try {
@@ -73,14 +73,14 @@ class AgentsDnFromHdsImporterServiceImpl implements AgentsDnImporterService
             $params = [];
             foreach ($agentsDn as $dn) {
                 if (empty($values)) {
-                    $values .= '(?, ?, now())';
+                    $values .= '(?, ?, CURRENT_DATE - INTERVAL \'1 day\')';
                 } else {
-                    $values .= ', (?, ?, now())';
+                    $values .= ', (?, ?, CURRENT_DATE - INTERVAL \'1 day\')';
                 }
                 $params[] = $dn['prefix'];
                 $params[] = $dn['dn'];
             }
-            $query = 'INSERT INTO hds.foreign_hds VALUES ' . $values;
+            $query = 'INSERT INTO '.$table.' VALUES ' . $values;
             $stmt = $dbh->prepare($query);
             $stmt->execute($params);
 
