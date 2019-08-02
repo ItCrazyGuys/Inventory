@@ -17,7 +17,6 @@ class InventoryItems1cFromCsvImporterServiceImpl implements InventoryItems1cImpo
     private const OUT_CHARSET = 'UTF-8';
     private const HEADER = 'ИнвентарнаяЕдиница';
     private const EMPTY = '';
-    private const INPUT_DATA_SIZE = 12;
     private const EQUAL_DATES = '000';
 
     private $resource1cProvider;
@@ -204,9 +203,6 @@ class InventoryItems1cFromCsvImporterServiceImpl implements InventoryItems1cImpo
         );
 
         // Prepare input data
-        if (self::INPUT_DATA_SIZE != count($data)) {
-            throw new \Exception('Not valid data: '. $line);
-        }
         $item['inventoryNumber'] = empty($data[0]) ? self::EMPTY : $data[0];
         if (empty($item['inventoryNumber']) || $item['inventoryNumber'] == self::HEADER) {
             throw new \Exception('Does not have an inventory number: '. $line);
